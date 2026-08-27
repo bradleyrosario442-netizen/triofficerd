@@ -1,103 +1,88 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import { BrandsStrip } from "@/components/home/brands-strip";
+import { CategoryStrip } from "@/components/home/category-strip";
+import { ClosingCta } from "@/components/home/closing-cta";
+import { Hero } from "@/components/home/hero";
+import { Pillars } from "@/components/home/pillars";
+import { StatsBand } from "@/components/home/stats-band";
+import { TopPicks } from "@/components/home/top-picks";
+import { ProductGrid } from "@/components/product/product-grid";
+import { Container, Section, SectionHeading } from "@/components/ui/section";
+import {
+  getActiveBrands,
+  getBestsellers,
+  getFeaturedProducts,
+  getHighlightedCategories,
+  getNewArrivals,
+  getOnSaleProducts,
+} from "@/lib/services/catalog";
+import { site } from "@/lib/data/site";
+import type { Product } from "@/lib/types";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: `${site.name} — ${site.tagline}`,
+  description: site.description,
+  alternates: { canonical: "/" },
+};
+
+export default function HomePage() {
+  const categories = getHighlightedCategories();
+  const brands = getActiveBrands();
+
+  /** Ninguna sección repite un producto ya mostrado más arriba. */
+  const shown = new Set<string>();
+  const take = (list: Product[], amount: number): Product[] => {
+    const picked: Product[] = [];
+    for (const product of list) {
+      if (shown.has(product.id)) continue;
+      shown.add(product.id);
+      picked.push(product);
+      if (picked.length === amount) break;
+    }
+    return picked;
+  };
+
+  const [deal] = take(getOnSaleProducts(30), 1);
+  const picks = take(getFeaturedProducts(30), 8);
+  const offers = take(getOnSaleProducts(30), 4);
+  const newArrivals = take(getNewArrivals(40), 8);
+  const bestsellers = take(getBestsellers(30), 4);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="bg-mist">
+      <Hero deal={deal} />
+      <Pillars />
+      <CategoryStrip categories={categories} />
+      <TopPicks title="Nuestra selección" products={picks} />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {offers.length > 0 ? (
+        <Section padding="compact" className="bg-white">
+          <Container>
+            <SectionHeading
+              title="Ofertas vigentes"
+              action={{ href: "/tienda?oferta=1", label: "Ver todas" }}
+              className="mb-6 sm:mb-7"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            <ProductGrid products={[...offers, ...bestsellers]} priorityCount={2} />
+          </Container>
+        </Section>
+      ) : null}
+
+      <StatsBand />
+      <TopPicks title="Recién llegado" products={newArrivals} />
+
+      <Section padding="compact" className="bg-white">
+        <Container>
+          <SectionHeading
+            title="Marcas"
+            action={{ href: "/marcas", label: "Ver todas" }}
+            className="mb-6 sm:mb-7"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <BrandsStrip brands={brands.slice(0, 10)} />
+        </Container>
+      </Section>
+
+      <ClosingCta />
     </div>
   );
 }
