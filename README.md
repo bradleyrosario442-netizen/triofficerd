@@ -118,6 +118,28 @@ pago antes de confirmar la orden. Los métodos de pago disponibles se declaran e
 
 ---
 
+## Despliegue en Netlify
+
+El repositorio ya trae `netlify.toml`. En Netlify: **Add new site → Import an
+existing project**, se elige este repositorio y la plataforma detecta Next.js e
+instala su runtime sola. No hay que tocar el comando ni el directorio.
+
+| Ajuste | Valor |
+|---|---|
+| Build command | `npm run build` |
+| Publish directory | `.next` |
+| Node | 22 |
+
+Cada push a `main` publica una versión nueva; las ramas y los pull requests
+generan sus propios *deploy previews*.
+
+### Dominio
+
+Mientras no haya dominio propio, `site.url` toma la variable `URL` que Netlify
+inyecta, así que canónicas, `sitemap.xml` y JSON-LD apuntan al dominio del
+despliegue. Al conectar el definitivo, se define `NEXT_PUBLIC_SITE_URL` en
+**Site settings → Environment variables** (ver `.env.example`).
+
 ## Identidad visual
 
 La paleta sale del logotipo: **azul `#0B33EE`**, **rojo `#F5003C`** y **verde `#35DD00`**.
