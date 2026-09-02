@@ -25,7 +25,7 @@ export function ClosingCta() {
           <div>
             <Icon name="quote" size={38} className="text-fresh-500" />
             <p className="mt-5 max-w-lg font-display text-[26px] font-semibold leading-[1.25] tracking-[-0.01em] sm:text-[32px]">
-              Un solo proveedor para la tecnología, el mobiliario y los insumos que la
+              Un solo proveedor para la tecnología, la impresión y el equipamiento que la
               operación necesita cada mes.
             </p>
             <p className="mt-5 text-[13px] uppercase tracking-[0.14em] text-white/50">

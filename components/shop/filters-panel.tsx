@@ -1,16 +1,15 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
-import { availabilityOptions, buildQuery, kindOptions } from "@/lib/services/shop-params";
+import { buildQuery } from "@/lib/services/shop-params";
 import type { Brand, Category } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/format";
 
 interface FiltersPanelProps {
   categories: Category[];
   brands: Brand[];
-  priceRange: { min: number; max: number };
   /** Categoría fija: en /categoria/[slug] el filtro de categoría no se muestra. */
   lockedCategory?: string;
 }
@@ -45,58 +44,17 @@ function Group({
   );
 }
 
-function CheckboxRow({
-  checked,
-  label,
-  onChange,
-  count,
-}: {
-  checked: boolean;
-  label: string;
-  onChange: () => void;
-  count?: number;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-2.5 py-1 text-[13.5px] text-ink">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-700 accent-brand-700 focus:ring-brand-500"
-      />
-      <span className="flex-1 truncate">{label}</span>
-      {typeof count === "number" ? <span className="text-[12px] text-muted">{count}</span> : null}
-    </label>
-  );
-}
-
-export function FiltersPanel({
-  categories,
-  brands,
-  priceRange,
-  lockedCategory,
-}: FiltersPanelProps) {
+export function FiltersPanel({ categories, brands, lockedCategory }: FiltersPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [brandQuery, setBrandQuery] = useState("");
 
   const selectedCategory = lockedCategory ?? searchParams.get("categoria") ?? "";
   const selectedSubcategory = searchParams.get("subcategoria") ?? "";
   const selectedBrands = (searchParams.get("marca") ?? "").split(",").filter(Boolean);
-  const selectedAvailability = (searchParams.get("disponibilidad") ?? "").split(",").filter(Boolean);
-  const selectedKinds = (searchParams.get("tipo") ?? "").split(",").filter(Boolean);
-  const onSale = searchParams.get("oferta") === "1";
 
-  const [min, setMin] = useState(searchParams.get("min") ?? "");
-  const [max, setMax] = useState(searchParams.get("max") ?? "");
-
-  useEffect(() => {
-    setMin(searchParams.get("min") ?? "");
-    setMax(searchParams.get("max") ?? "");
-  }, [searchParams]);
-
-  // El panel móvil permanece abierto al filtrar: el usuario suele combinar
-  // varios criterios y cierra con el botón "Ver N productos".
+  // El panel móvil no se cierra al filtrar: se suelen combinar varios criterios.
   const apply = (updates: Record<string, string | string[] | null>) => {
     router.push(`${pathname}${buildQuery(searchParams, updates)}`, { scroll: false });
   };
@@ -105,6 +63,15 @@ export function FiltersPanel({
     list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
   const activeCategory = categories.find((category) => category.slug === selectedCategory);
+
+  // Con más de cien marcas, el listado necesita su propio buscador.
+  const visibleBrands = useMemo(() => {
+    const needle = brandQuery.trim().toLowerCase();
+    const list = needle
+      ? brands.filter((brand) => brand.name.toLowerCase().includes(needle))
+      : brands;
+    return list.slice(0, 60);
+  }, [brands, brandQuery]);
 
   return (
     <div className="text-ink">
@@ -145,7 +112,7 @@ export function FiltersPanel({
 
       {activeCategory ? (
         <Group title="Subcategoría">
-          <div className="max-h-64 space-y-1 overflow-y-auto pr-1 scroll-thin">
+          <div className="max-h-72 space-y-1 overflow-y-auto pr-1 scroll-thin">
             <button
               type="button"
               onClick={() => apply({ subcategoria: null })}
@@ -176,78 +143,32 @@ export function FiltersPanel({
       ) : null}
 
       <Group title="Marca">
+        <input
+          type="search"
+          value={brandQuery}
+          onChange={(event) => setBrandQuery(event.target.value)}
+          placeholder="Buscar marca…"
+          aria-label="Buscar marca"
+          className="mb-2 h-9 w-full rounded-lg border border-line px-2.5 text-[13px] focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        />
         <div className="max-h-64 overflow-y-auto pr-1 scroll-thin">
-          {brands.map((brand) => (
-            <CheckboxRow
+          {visibleBrands.map((brand) => (
+            <label
               key={brand.slug}
-              label={brand.name}
-              checked={selectedBrands.includes(brand.slug)}
-              onChange={() => apply({ marca: toggle(selectedBrands, brand.slug) })}
-            />
+              className="flex cursor-pointer items-center gap-2.5 py-1 text-[13.5px] text-ink"
+            >
+              <input
+                type="checkbox"
+                checked={selectedBrands.includes(brand.slug)}
+                onChange={() => apply({ marca: toggle(selectedBrands, brand.slug) })}
+                className="h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700 focus:ring-brand-500"
+              />
+              <span className="flex-1 truncate">{brand.name}</span>
+            </label>
           ))}
-        </div>
-      </Group>
-
-      <Group title="Precio">
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            inputMode="numeric"
-            value={min}
-            onChange={(event) => setMin(event.target.value)}
-            placeholder={String(priceRange.min)}
-            aria-label="Precio mínimo"
-            className="h-10 w-full rounded-lg border border-line px-2.5 text-[13px] focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          />
-          <span className="text-muted">–</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={max}
-            onChange={(event) => setMax(event.target.value)}
-            placeholder={String(priceRange.max)}
-            aria-label="Precio máximo"
-            className="h-10 w-full rounded-lg border border-line px-2.5 text-[13px] focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          />
-        </div>
-        <p className="mt-2 text-[12px] text-muted">
-          Rango disponible: {formatCurrency(priceRange.min)} – {formatCurrency(priceRange.max)}
-        </p>
-        <button
-          type="button"
-          onClick={() => apply({ min: min || null, max: max || null })}
-          className="mt-2.5 h-9 w-full rounded-lg border border-line text-[13px] font-medium transition-colors hover:border-brand-300 hover:text-brand-700"
-        >
-          Aplicar precio
-        </button>
-      </Group>
-
-      <Group title="Disponibilidad">
-        {availabilityOptions.map((option) => (
-          <CheckboxRow
-            key={option.param}
-            label={option.label}
-            checked={selectedAvailability.includes(option.param)}
-            onChange={() => apply({ disponibilidad: toggle(selectedAvailability, option.param) })}
-          />
-        ))}
-      </Group>
-
-      <Group title="Tipo de producto">
-        {kindOptions.map((option) => (
-          <CheckboxRow
-            key={option.param}
-            label={option.label}
-            checked={selectedKinds.includes(option.param)}
-            onChange={() => apply({ tipo: toggle(selectedKinds, option.param) })}
-          />
-        ))}
-        <div className="mt-2 border-t border-line pt-2">
-          <CheckboxRow
-            label="Solo productos en oferta"
-            checked={onSale}
-            onChange={() => apply({ oferta: onSale ? null : "1" })}
-          />
+          {visibleBrands.length === 0 ? (
+            <p className="py-2 text-[12.5px] text-muted">Sin coincidencias</p>
+          ) : null}
         </div>
       </Group>
 

@@ -6,9 +6,9 @@ import { Container } from "@/components/ui/section";
 import { parseShopParams, type RawParams } from "@/lib/services/shop-params";
 
 export const metadata: Metadata = {
-  title: "Tienda en línea",
+  title: "Catálogo",
   description:
-    "Catálogo de tecnología, mobiliario, impresión, materiales de oficina, limpieza y artículos escolares. Filtra por categoría, marca, precio y disponibilidad.",
+    "Catálogo de tecnología, impresión, equipos de oficina, mobiliario y escolares. Filtra por categoría y marca, y cotiza por WhatsApp.",
   alternates: { canonical: "/tienda" },
 };
 
@@ -24,16 +24,16 @@ export default async function TiendaPage({
     <>
       <div className="border-b border-line bg-canvas">
         <Container className="py-6 sm:py-8">
-          <Breadcrumbs items={[{ label: "Tienda" }]} />
+          <Breadcrumbs items={[{ label: "Catálogo" }]} />
           <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-[32px]">
-                {state.raw.q ? `Resultados para “${state.raw.q}”` : "Tienda en línea"}
+                {state.raw.q ? `Resultados para “${state.raw.q}”` : "Catálogo"}
               </h1>
               <p className="mt-2 max-w-2xl text-[14.5px] leading-relaxed text-muted">
                 {state.raw.q
                   ? "Productos que coinciden con tu búsqueda dentro del catálogo publicado."
-                  : "Todo el catálogo disponible: filtra por categoría, marca, precio y disponibilidad."}
+                  : "Todo el catálogo: filtra por categoría y marca. Los precios se confirman por cotización."}
               </p>
             </div>
           </div>

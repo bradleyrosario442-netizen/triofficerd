@@ -10,7 +10,7 @@ import { getActiveBrands, getCategory, getProducts } from "@/lib/services/catalo
 export const metadata: Metadata = {
   title: "Marcas",
   description:
-    "Marcas registradas en el catálogo de Tri Office para tecnología, impresión, mobiliario, oficina, limpieza y escolares.",
+    "Marcas representadas en el catálogo de Tri Office: tecnología, impresión, equipos de oficina, mobiliario y escolares.",
   alternates: { canonical: "/marcas" },
 };
 

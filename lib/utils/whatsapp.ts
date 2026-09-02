@@ -11,9 +11,16 @@ export const whatsappGeneral = whatsappLink(
   `Hola ${site.name}, necesito información sobre sus productos y servicios.`,
 );
 
+/** Mensaje del botón COTIZAR: identifica el producto y pide precio y stock. */
 export function whatsappForProduct(product: Product): string {
+  const model = product.sku && product.sku !== "—" ? `
+Número de parte: ${product.sku}` : "";
   return whatsappLink(
-    `Hola ${site.name}, estoy interesado en ${product.name} (SKU ${product.sku}).`,
+    `Hola ${site.name}, quiero cotizar el siguiente producto:
+
+${product.name}${model}
+
+¿Podrían indicarme precio y disponibilidad?`,
   );
 }
 

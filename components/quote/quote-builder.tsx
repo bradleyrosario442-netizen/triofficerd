@@ -7,7 +7,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { QuantityInput } from "@/components/ui/quantity";
-import { getBrandName } from "@/lib/services/catalog";
+import { brandName } from "@/lib/data/catalog-meta";
 import { submitQuote } from "@/lib/services/orders";
 import { useQuote } from "@/lib/store/quote-context";
 import type { QuoteItem, QuoteRequest } from "@/lib/types";
@@ -186,7 +186,7 @@ export function QuoteBuilder() {
 
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">
-                        {getBrandName(item.brand)}
+                        {brandName(item.brand)}
                       </p>
                       <Link
                         href={`/producto/${item.slug}`}
@@ -198,7 +198,7 @@ export function QuoteBuilder() {
                         SKU: {item.sku}
                         {item.referencePrice !== null
                           ? ` · Referencia: ${formatCurrency(item.referencePrice)}`
-                          : " · Precio por definir"}
+                          : ""}
                       </p>
 
                       <div className="mt-2.5 flex flex-wrap items-center gap-3">
@@ -248,7 +248,7 @@ export function QuoteBuilder() {
           )}
         </div>
 
-        {items.length > 0 ? (
+        {items.length > 0 && referenceTotal > 0 ? (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-canvas px-5 py-4">
             <div>
               <p className="text-[13px] text-muted">Referencia estimada (sin impuestos)</p>

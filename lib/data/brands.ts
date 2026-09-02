@@ -1,31 +1,64 @@
+import { products, slugify } from "@/lib/data/products";
 import type { Brand } from "@/lib/types";
+import { titleCase } from "@/lib/utils/product-name";
 
 /**
- * Marcas configuradas en el sistema.
+ * Marcas del catálogo, derivadas de los productos publicados.
  *
- * `logo` apunta al archivo cargado desde administración. Mientras esté en `null`
- * la interfaz muestra un wordmark tipográfico: no se publica ningún logotipo ni
- * se declara ningún acuerdo comercial que no esté cargado explícitamente aquí.
+ * No se declara ninguna marca que no tenga producto, y `logo` queda en `null`
+ * hasta que se cargue el archivo correspondiente: mientras tanto se muestra el
+ * nombre en texto. No se publica ningún logotipo ajeno sin tenerlo cargado.
  */
-export const brands: Brand[] = [
-  { slug: "hp", name: "HP", logo: null, categories: ["tecnologia", "impresion"] },
-  { slug: "epson", name: "Epson", logo: null, categories: ["tecnologia", "impresion"] },
-  { slug: "canon", name: "Canon", logo: null, categories: ["tecnologia", "impresion"] },
-  { slug: "brother", name: "Brother", logo: null, categories: ["impresion", "tecnologia"] },
-  { slug: "lenovo", name: "Lenovo", logo: null, categories: ["tecnologia"] },
-  { slug: "dell", name: "Dell", logo: null, categories: ["tecnologia"] },
-  { slug: "logitech", name: "Logitech", logo: null, categories: ["tecnologia"] },
-  { slug: "tp-link", name: "TP-Link", logo: null, categories: ["tecnologia"] },
-  { slug: "grandstream", name: "Grandstream", logo: null, categories: ["tecnologia"] },
-  { slug: "casio", name: "Casio", logo: null, categories: ["tecnologia", "equipos-de-oficina"] },
-  { slug: "fellowes", name: "Fellowes", logo: null, categories: ["equipos-de-oficina"] },
-  { slug: "3m", name: "3M", logo: null, categories: ["materiales-de-oficina", "limpieza"] },
-  { slug: "bic", name: "BIC", logo: null, categories: ["materiales-de-oficina", "escolares"] },
-  { slug: "faber-castell", name: "Faber-Castell", logo: null, categories: ["escolares", "materiales-de-oficina"] },
-  { slug: "norma", name: "Norma", logo: null, categories: ["escolares", "materiales-de-oficina"] },
-  { slug: "scribe", name: "Scribe", logo: null, categories: ["materiales-de-oficina", "escolares"] },
-  { slug: "clorox", name: "Clorox", logo: null, categories: ["limpieza"] },
-  { slug: "mistolin", name: "Mistolin", logo: null, categories: ["limpieza"] },
-  { slug: "officeline", name: "OfficeLine", logo: null, categories: ["mobiliario", "equipos-de-oficina"] },
-  { slug: "ergoplus", name: "ErgoPlus", logo: null, categories: ["mobiliario"] },
-];
+
+/** Nombres con grafía propia que el título automático no acierta. */
+const EXACT: Record<string, string> = {
+  generico: "Genérico",
+  hp: "HP",
+  "hp-refurbish": "HP Refurbish",
+  msi: "MSI",
+  aoc: "AOC",
+  jbl: "JBL",
+  tp_link: "TP-Link",
+  "tp-link": "TP-Link",
+  hikvision: "HIKVISION",
+  hiksemi: "HIKSEMI",
+  chargeworx: "CHARGEWORX",
+  myo: "MYO",
+  apc: "APC",
+  ups: "UPS",
+  lg: "LG",
+  asus: "ASUS",
+  acer: "Acer",
+  "klip-xtreme": "Klip Xtreme",
+  xtech: "Xtech",
+  "nexxt-infrastructure": "Nexxt Infrastructure",
+};
+
+function buildBrands(): Brand[] {
+  const counts = new Map<string, { name: string; count: number; cats: Set<string> }>();
+
+  for (const product of products) {
+    const entry = counts.get(product.brand) ?? {
+      name: EXACT[product.brand] ?? titleCase(product.brand.replace(/-/g, " ")),
+      count: 0,
+      cats: new Set<string>(),
+    };
+    entry.count += 1;
+    entry.cats.add(product.category);
+    counts.set(product.brand, entry);
+  }
+
+  return [...counts]
+    .sort((a, b) => b[1].count - a[1].count || a[1].name.localeCompare(b[1].name))
+    .map(([slug, entry]) => ({
+      slug,
+      name: entry.name,
+      logo: null,
+      categories: [...entry.cats],
+    }));
+}
+
+export const brands: Brand[] = buildBrands();
+
+/** Slug de marca a partir del nombre, para enlaces y filtros. */
+export { slugify };

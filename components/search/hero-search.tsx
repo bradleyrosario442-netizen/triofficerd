@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useSearch } from "@/components/search/use-search";
 import { Icon } from "@/components/ui/icon";
-import { popularSearches } from "@/lib/services/catalog";
-import { formatCurrency } from "@/lib/utils/format";
+import { popularSearches } from "@/lib/data/catalog-meta";
 
 /** Buscador destacado de la portada, con resultados predictivos en línea. */
 export function HeroSearch() {
@@ -122,7 +121,7 @@ export function HeroSearch() {
                         <span className="block truncate text-[12px] text-muted">{product.brand}</span>
                       </span>
                       <span className="shrink-0 text-[13px] font-semibold text-ink">
-                        {product.price === null ? "Cotizar" : formatCurrency(product.price)}
+                        {"Cotizar"}
                       </span>
                     </Link>
                   </li>

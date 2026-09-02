@@ -11,19 +11,11 @@ import {
   getBrandsForCategory,
   getCategories,
   getCategory,
-  getPriceRange,
   getSubcategory,
   paginate,
   sortProducts,
 } from "@/lib/services/catalog";
-import {
-  PAGE_SIZE,
-  availabilityOptions,
-  kindOptions,
-  sortOptions,
-  type ShopState,
-} from "@/lib/services/shop-params";
-import { formatCurrency } from "@/lib/utils/format";
+import { PAGE_SIZE, sortOptions, type ShopState } from "@/lib/services/shop-params";
 
 interface CatalogViewProps {
   state: ShopState;
@@ -52,7 +44,6 @@ export function CatalogView({
 
   const categories = getCategories();
   const brands = getBrandsForCategory(lockedCategory ?? filters.category);
-  const priceRange = getPriceRange(lockedCategory ?? filters.category);
 
   const chips: ActiveFilterChip[] = [];
   if (raw.q) chips.push({ key: "q", label: `Búsqueda: “${raw.q}”` });
@@ -69,29 +60,6 @@ export function CatalogView({
   raw.marcas.forEach((brand) =>
     chips.push({ key: "marca", value: brand, label: getBrandName(brand) }),
   );
-  raw.disponibilidad.forEach((value) =>
-    chips.push({
-      key: "disponibilidad",
-      value,
-      label: availabilityOptions.find((option) => option.param === value)?.label ?? value,
-    }),
-  );
-  raw.tipo.forEach((value) =>
-    chips.push({
-      key: "tipo",
-      value,
-      label: kindOptions.find((option) => option.param === value)?.label ?? value,
-    }),
-  );
-  if (raw.min || raw.max) {
-    chips.push({
-      key: raw.min ? "min" : "max",
-      label: `Precio ${raw.min ? formatCurrency(Number(raw.min)) : "—"} a ${
-        raw.max ? formatCurrency(Number(raw.max)) : "—"
-      }`,
-    });
-  }
-  if (raw.oferta) chips.push({ key: "oferta", label: "En oferta" });
 
   const params = new URLSearchParams();
   Object.entries({
@@ -99,12 +67,7 @@ export function CatalogView({
     categoria: lockedCategory ? "" : raw.categoria,
     subcategoria: lockedSubcategory ? "" : raw.subcategoria,
     marca: raw.marcas.join(","),
-    min: raw.min,
-    max: raw.max,
-    disponibilidad: raw.disponibilidad.join(","),
-    tipo: raw.tipo.join(","),
-    oferta: raw.oferta ? "1" : "",
-    orden: sort === "featured" ? "" : (sortOptions.find((option) => option.value === sort)?.param ?? ""),
+    orden: sort === "relevance" ? "" : (sortOptions.find((o) => o.value === sort)?.param ?? ""),
     vista: view === "list" ? "lista" : "",
   }).forEach(([key, value]) => {
     if (value) params.set(key, value);
@@ -113,17 +76,12 @@ export function CatalogView({
   return (
     <div className="grid gap-8 lg:grid-cols-[254px_1fr] lg:gap-10">
       <aside className="hidden lg:block">
-        <div className="sticky top-32 rounded-xl border border-line bg-white p-5">
+        <div className="sticky top-32 rounded-2xl border border-line bg-white p-5">
           <h2 className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink">
             <Icon name="sliders" size={16} className="text-brand-700" />
             Filtrar
           </h2>
-          <FiltersPanel
-            categories={categories}
-            brands={brands}
-            priceRange={priceRange}
-            lockedCategory={lockedCategory}
-          />
+          <FiltersPanel categories={categories} brands={brands} lockedCategory={lockedCategory} />
         </div>
       </aside>
 
@@ -134,7 +92,6 @@ export function CatalogView({
           view={view}
           categories={categories}
           brands={brands}
-          priceRange={priceRange}
           lockedCategory={lockedCategory}
           activeFilterCount={chips.length}
         />
@@ -142,7 +99,7 @@ export function CatalogView({
         <ActiveFilters chips={chips} />
 
         {paged.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line bg-canvas px-6 py-16 text-center">
+          <div className="rounded-2xl border border-dashed border-line bg-canvas px-6 py-16 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-muted shadow-card">
               <Icon name="search" size={22} />
             </span>
@@ -150,8 +107,8 @@ export function CatalogView({
               No encontramos productos con estos filtros
             </h3>
             <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-relaxed text-muted">
-              Ajusta los criterios de búsqueda o solicita una cotización: trabajamos con un catálogo
-              más amplio del que se muestra en línea.
+              Ajusta los criterios o escríbenos: trabajamos con un catálogo más amplio del que se
+              muestra en línea.
             </p>
             <div className="mt-6 flex flex-col justify-center gap-2.5 sm:flex-row">
               <LinkButton href={basePath} variant="outline">

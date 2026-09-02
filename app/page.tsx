@@ -11,10 +11,12 @@ import { Container, Section, SectionHeading } from "@/components/ui/section";
 import {
   getActiveBrands,
   getBestsellers,
+  getBrandName,
   getFeaturedProducts,
   getHighlightedCategories,
   getNewArrivals,
-  getOnSaleProducts,
+  getProducts,
+  getSubcategory,
 } from "@/lib/services/catalog";
 import { site } from "@/lib/data/site";
 import type { Product } from "@/lib/types";
@@ -28,6 +30,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   const categories = getHighlightedCategories();
   const brands = getActiveBrands();
+  const total = getProducts().length;
 
   /** Ninguna sección repite un producto ya mostrado más arriba. */
   const shown = new Set<string>();
@@ -42,34 +45,39 @@ export default function HomePage() {
     return picked;
   };
 
-  const [deal] = take(getOnSaleProducts(30), 1);
-  const picks = take(getFeaturedProducts(30), 8);
-  const offers = take(getOnSaleProducts(30), 4);
-  const newArrivals = take(getNewArrivals(40), 8);
-  const bestsellers = take(getBestsellers(30), 4);
+  /** El carrusel necesita marca y categoría ya resueltas: son datos del servidor. */
+  const decorate = (list: Product[]) =>
+    list.map((product) => ({
+      product,
+      brandName: getBrandName(product.brand),
+      categoryName: getSubcategory(product.category, product.subcategory)?.name ?? "",
+    }));
+
+  const [deal] = take(getFeaturedProducts(1), 1);
+  const picks = decorate(take(getFeaturedProducts(40), 10));
+  const grid = take(getBestsellers(40), 8);
+  const arrivals = decorate(take(getNewArrivals(40), 10));
 
   return (
     <div className="bg-mist">
-      <Hero deal={deal} />
+      <Hero deal={deal} total={total} />
       <Pillars />
       <CategoryStrip categories={categories} />
-      <TopPicks title="Nuestra selección" products={picks} />
+      <TopPicks title="Del catálogo" items={picks} />
 
-      {offers.length > 0 ? (
-        <Section padding="compact" className="bg-white">
-          <Container>
-            <SectionHeading
-              title="Ofertas vigentes"
-              action={{ href: "/tienda?oferta=1", label: "Ver todas" }}
-              className="mb-6 sm:mb-7"
-            />
-            <ProductGrid products={[...offers, ...bestsellers]} priorityCount={2} />
-          </Container>
-        </Section>
-      ) : null}
+      <Section padding="compact" className="bg-white">
+        <Container>
+          <SectionHeading
+            title="Equipamiento de oficina"
+            action={{ href: "/tienda", label: "Ver catálogo" }}
+            className="mb-6 sm:mb-7"
+          />
+          <ProductGrid products={grid} priorityCount={4} />
+        </Container>
+      </Section>
 
-      <StatsBand />
-      <TopPicks title="Recién llegado" products={newArrivals} />
+      <StatsBand total={total} brands={brands.length} />
+      <TopPicks title="Tecnología y redes" items={arrivals} />
 
       <Section padding="compact" className="bg-white">
         <Container>

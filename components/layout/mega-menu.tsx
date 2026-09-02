@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { categories } from "@/lib/data/categories";
-import { getMenuSubcategories } from "@/lib/services/catalog";
+import { menuSubcategories } from "@/lib/data/catalog-meta";
 import { cn } from "@/lib/utils/format";
 
 /**
@@ -89,7 +89,7 @@ export function MegaMenu() {
                       </span>
                     </Link>
                     <ul className="space-y-1.5">
-                      {getMenuSubcategories(category.slug, 7).map((subcategory) => (
+                      {menuSubcategories(category.slug, 7).map((subcategory) => (
                         <li key={subcategory.slug}>
                           <Link
                             href={`/categoria/${category.slug}/${subcategory.slug}`}

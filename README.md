@@ -75,20 +75,20 @@ lib/
 
 ---
 
-## Carrito vs. cotización empresarial
+## Cotización, no carrito
 
-| | Carrito | Cotización empresarial |
+El catálogo no publica precios, así que no hay compra directa ni checkout. Cada
+producto ofrece dos caminos:
+
+| | WhatsApp | Lista de cotización |
 |---|---|---|
-| Ruta | `/carrito` → `/checkout` | `/cotizacion` |
-| Objetivo | Compra directa con precios publicados | Solicitud de propuesta por volumen |
-| Precio | Definido, con ITBIS y envío calculados | Lo confirma un asesor |
-| Resultado | Pedido `TO-…` | Solicitud `COT-…` + seguimiento por WhatsApp |
-| Estado | `lib/store/cart-context.tsx` | `lib/store/quote-context.tsx` |
+| Dónde | Botón **COTIZAR** en tarjeta y ficha | Botón **Agregar a mi cotización** en la ficha |
+| Para qué | Consultar un producto puntual | Armar un requerimiento de varias líneas |
+| Resultado | Chat con el producto y su número de parte | Solicitud `COT-…` con los datos de la empresa |
 
-Ambos persisten en `localStorage` (`trioffice.cart.v1`, `trioffice.quote.v1`)
-para que no se pierdan al recargar la página.
-
----
+La lista persiste en `localStorage` (`trioffice.quote.v1`) para que no se pierda
+al recargar. El módulo de carrito y checkout sigue en el repositorio, sin
+enlaces en la interfaz, listo para el día en que haya precios publicados.
 
 ## Conectar la base de datos (Supabase)
 
@@ -157,15 +157,39 @@ Los tonos `-600`/`-700` se usan cuando hay texto encima, para mantener contraste
 
 ---
 
-## Contenido de demostración
+## El catálogo
 
-- **78 productos** ficticios distribuidos en las 7 categorías, con SKU,
-  especificaciones, disponibilidad, ofertas y productos "solo cotización".
-- **Imágenes placeholder** en `public/img/products/`: ilustraciones vectoriales
-  generadas localmente que ocupan el lugar de las fotografías definitivas.
-- **Marcas**: `lib/data/brands.ts` define las marcas registradas. Mientras `logo`
-  sea `null` se muestra el nombre en texto; no se publica ningún logotipo ni se
-  declara ningún acuerdo comercial que no esté cargado explícitamente ahí.
+La fuente es `data/products.json`, que produce `scripts/import-catalog.mjs`.
+Cada entrada tiene cuatro campos y ninguno más:
+
+```json
+{
+  "brand": "HP",
+  "name": "IMPRESORA LASERJET M111W PRINTER",
+  "model": "7MD68A",
+  "sourceCategory": "Laserjet"
+}
+```
+
+**No existe campo de precio ni de descripción.** El importador solo tiene
+expresiones para esos cuatro datos, así que precios, textos comerciales,
+promociones e inventario no pueden llegar al archivo. En el destino, cada
+producto se construye con `price: null` y `quoteOnly: true`.
+
+`lib/data/taxonomy.ts` traduce cada categoría de origen a la línea y
+subcategoría de Tri Office, y fija qué ilustración usa el producto. Es la única
+fuente: el árbol de categorías se deriva de ese mapa.
+
+### Imágenes
+
+Las fichas usan ilustraciones vectoriales por tipo de producto, generadas
+localmente en `public/img/products/`. Son un marcador de posición: las
+fotografías reales entran cambiando `imagesFor()` en `lib/data/products.ts`.
+
+Con el número de parte del fabricante ya en el catálogo, la vía correcta para
+las fotos oficiales es un servicio de contenido para revendedores —Icecat, por
+ejemplo—, que las entrega con licencia de uso. No se descargan imágenes de
+terceros sin esa autorización.
 
 ---
 

@@ -10,7 +10,7 @@ import { telHref, whatsappGeneral } from "@/lib/utils/whatsapp";
 export const metadata: Metadata = {
   title: "Soluciones para empresas",
   description:
-    "Tri Office abastece a empresas e instituciones con tecnología, mobiliario, impresión, suministros y limpieza mediante cotizaciones y pedidos por volumen.",
+    "Tri Office abastece a empresas e instituciones con tecnología, impresión, equipos de oficina y mobiliario mediante cotizaciones y pedidos por volumen.",
   alternates: { canonical: "/empresas" },
 };
 
@@ -75,7 +75,7 @@ export default function EmpresasPage() {
             <p className="mt-4 text-[16px] leading-relaxed text-brand-100/85">
               Tri Office puede convertirse en el proveedor que atiende los requerimientos de toda la
               organización: desde el equipamiento tecnológico y el mobiliario hasta la reposición
-              mensual de papelería, consumibles de impresión y artículos de limpieza.
+              mensual de consumibles de impresión y accesorios de cómputo.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <LinkButton href={whatsappGeneral} variant="accent" size="lg" target="_blank" rel="noopener noreferrer">

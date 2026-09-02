@@ -3,8 +3,6 @@ import Link from "next/link";
 import { PillLink } from "@/components/ui/pill-button";
 import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
-import { site } from "@/lib/data/site";
-import { formatCurrencyShort } from "@/lib/utils/format";
 import type { Product } from "@/lib/types";
 
 /** Piezas del collage: trazo sin fondo, con tamaño, posición y ritmo propios. */
@@ -15,7 +13,7 @@ const collage = [
   { src: "/img/hero/toner.svg", className: "left-[2%] top-[52%] w-[19%] z-30", delay: "3.6s" },
 ];
 
-export function Hero({ deal }: { deal?: Product }) {
+export function Hero({ deal, total }: { deal?: Product; total: number }) {
   return (
     <section className="relative overflow-hidden bg-mist">
       {/* Círculo de marca y trama de puntos, como fondo del collage */}
@@ -47,7 +45,7 @@ export function Hero({ deal }: { deal?: Product }) {
             </h1>
 
             <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-muted">
-              Tecnología, mobiliario y suministros. Compra en línea o cotiza por volumen.
+              Tecnología, impresión, mobiliario y equipos. Cotiza en un mensaje.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -61,8 +59,8 @@ export function Hero({ deal }: { deal?: Product }) {
             </div>
 
             <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-[12.5px] font-medium text-ink shadow-card">
-              <Icon name="truck" size={15} className="text-fresh-600" />
-              Envío gratis desde {formatCurrencyShort(site.freeShippingThreshold)}
+              <Icon name="box" size={15} className="text-fresh-600" />
+              {total.toLocaleString("es-DO")} productos en catálogo
             </p>
           </div>
 
@@ -97,8 +95,8 @@ export function Hero({ deal }: { deal?: Product }) {
                   <Image src={deal.images[0]} alt="" fill sizes="48px" className="object-cover" />
                 </span>
                 <span>
-                  <span className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-accent-600">
-                    Oferta de la semana
+                  <span className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-brand-600">
+                    Del catálogo
                   </span>
                   <span className="mt-0.5 block max-w-[15rem] truncate text-[13px] font-semibold text-ink">
                     {deal.name}

@@ -6,15 +6,14 @@ import { mailHref, telHref, whatsappGeneral } from "@/lib/utils/whatsapp";
 
 const columns = [
   {
-    title: "Productos",
+    title: "Catálogo",
     links: [
       { href: "/categoria/tecnologia", label: "Tecnología" },
       { href: "/categoria/impresion", label: "Impresión" },
-      { href: "/categoria/mobiliario", label: "Mobiliario" },
-      { href: "/categoria/materiales-de-oficina", label: "Materiales de oficina" },
       { href: "/categoria/equipos-de-oficina", label: "Equipos de oficina" },
-      { href: "/categoria/limpieza", label: "Limpieza" },
+      { href: "/categoria/mobiliario", label: "Mobiliario" },
       { href: "/categoria/escolares", label: "Escolares" },
+      { href: "/tienda", label: "Ver todo el catálogo" },
     ],
   },
   {
@@ -23,7 +22,7 @@ const columns = [
       { href: "/nosotros", label: "Nosotros" },
       { href: "/empresas", label: "Soluciones para empresas" },
       { href: "/marcas", label: "Marcas" },
-      { href: "/tienda", label: "Tienda" },
+      { href: "/tienda", label: "Catálogo" },
       { href: "/contacto", label: "Contacto" },
     ],
   },
@@ -32,9 +31,8 @@ const columns = [
     links: [
       { href: "/ayuda/preguntas-frecuentes", label: "Preguntas frecuentes" },
       { href: "/ayuda/envios", label: "Envíos" },
-      { href: "/cotizacion", label: "Cotizaciones" },
       { href: "/ayuda/garantia", label: "Garantía" },
-      { href: "/carrito", label: "Mi carrito" },
+      { href: "/cotizacion", label: "Mi cotización" },
     ],
   },
 ];
@@ -49,8 +47,8 @@ export function Footer() {
           <div>
             <Logo tone="dark" />
             <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-brand-100/75">
-              Proveedor de tecnología, mobiliario, impresión, suministros de oficina, limpieza y
-              artículos escolares para empresas, instituciones y hogares.
+              Proveedor de tecnología, impresión, equipos de oficina, mobiliario y artículos
+              escolares para empresas, instituciones y hogares en República Dominicana.
             </p>
             <div className="mt-5 flex gap-2">
               {(["facebook", "instagram", "linkedin"] as const).map((network) => (

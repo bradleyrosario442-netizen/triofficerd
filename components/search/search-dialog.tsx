@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearch } from "@/components/search/use-search";
 import { Icon } from "@/components/ui/icon";
-import { popularSearches } from "@/lib/services/catalog";
+import { popularSearches } from "@/lib/data/catalog-meta";
 import { useUI } from "@/lib/store/ui-context";
-import { cn, formatCurrency } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/format";
 
 interface Hit {
   href: string;
@@ -198,7 +198,7 @@ export function SearchDialog() {
                             </span>
                           </span>
                           <span className="shrink-0 text-[13px] font-semibold text-ink">
-                            {product.price === null ? "Cotizar" : formatCurrency(product.price)}
+                            {"Cotizar"}
                           </span>
                         </button>
                       </li>

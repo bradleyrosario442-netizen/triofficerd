@@ -249,6 +249,174 @@ const icons = {
     <path d="M38 16v58M62 26v58"/>`,
   clip: `
     <path d="M62 30v34a18 18 0 0 1-36 0V28a12 12 0 0 1 24 0v34a6 6 0 0 1-12 0V32"/>`,
+  monitor: `
+    <rect x="10" y="20" width="80" height="50" rx="4"/>
+    <path d="M44 70h12l2 10H42z"/>
+    <path d="M32 80h36"/>`,
+  mouse: `
+    <rect x="34" y="16" width="32" height="68" rx="16"/>
+    <path d="M50 16v22"/>
+    <path d="M50 30v10"/>`,
+  headset: `
+    <path d="M22 58V48a28 28 0 0 1 56 0v10"/>
+    <rect x="14" y="54" width="16" height="26" rx="7"/>
+    <rect x="70" y="54" width="16" height="26" rx="7"/>
+    <path d="M70 70h10a6 6 0 0 0 6-6"/>
+    <path d="M30 74h10a6 6 0 0 1 6 6v4"/>`,
+  speaker: `
+    <rect x="30" y="12" width="40" height="76" rx="8"/>
+    <circle cx="50" cy="60" r="14"/>
+    <circle cx="50" cy="30" r="6"/>`,
+  ink_bottle: `
+    <path d="M38 30h24v50a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8z"/>
+    <path d="M42 30V18h16v12"/>
+    <path d="M38 56h24"/>`,
+  network_switch: `
+    <rect x="10" y="36" width="80" height="28" rx="4"/>
+    <path d="M22 50h8M36 50h8M50 50h8M64 50h8"/>
+    <circle cx="80" cy="44" r="2.5"/>`,
+  case_pc: `
+    <rect x="28" y="12" width="44" height="76" rx="5"/>
+    <path d="M28 34h44"/>
+    <circle cx="40" cy="23" r="3"/>
+    <path d="M38 46h24M38 56h24M38 66h16"/>`,
+  hdd: `
+    <rect x="14" y="30" width="72" height="40" rx="5"/>
+    <circle cx="46" cy="50" r="13"/>
+    <circle cx="46" cy="50" r="3"/>
+    <path d="M70 62h6"/>`,
+  ups: `
+    <rect x="24" y="16" width="52" height="70" rx="6"/>
+    <path d="M52 30l-10 18h14l-10 18"/>
+    <path d="M34 76h32"/>`,
+  fan: `
+    <circle cx="50" cy="50" r="34"/>
+    <circle cx="50" cy="50" r="7"/>
+    <path d="M50 43c-12-14-26-6-20 6 4 8 14 6 20-6z"/>
+    <path d="M57 50c14-12 6-26-6-20-8 4-6 14 6 20z"/>
+    <path d="M50 57c12 14 26 6 20-6-4-8-14-6-20 6z"/>
+    <path d="M43 50c-14 12-6 26 6 20 8-4 6-14-6-20z"/>`,
+  nvr: `
+    <rect x="10" y="34" width="80" height="32" rx="4"/>
+    <circle cx="26" cy="50" r="4"/>
+    <path d="M42 44h34M42 56h22"/>`,
+  psu: `
+    <rect x="14" y="30" width="72" height="40" rx="4"/>
+    <circle cx="34" cy="50" r="12"/>
+    <path d="M62 42h14M62 50h14M62 58h8"/>`,
+  usb_drive: `
+    <rect x="18" y="38" width="54" height="24" rx="4"/>
+    <rect x="72" y="44" width="14" height="12" rx="2"/>
+    <path d="M30 50h14"/>`,
+  tv: `
+    <rect x="8" y="18" width="84" height="52" rx="4"/>
+    <path d="M36 80h28"/>
+    <path d="M50 70v10"/>`,
+  tablet: `
+    <rect x="24" y="10" width="52" height="80" rx="7"/>
+    <path d="M24 24h52M24 76h52"/>
+    <circle cx="50" cy="83" r="2.5"/>`,
+  cpu_chip: `
+    <rect x="28" y="28" width="44" height="44" rx="4"/>
+    <rect x="42" y="42" width="16" height="16" rx="2"/>
+    <path d="M38 28V18M50 28V18M62 28V18M38 82V72M50 82V72M62 82V72"/>
+    <path d="M28 38H18M28 50H18M28 62H18M82 38H72M82 50H72M82 62H72"/>`,
+  gpu: `
+    <rect x="10" y="34" width="76" height="32" rx="4"/>
+    <circle cx="34" cy="50" r="9"/>
+    <circle cx="60" cy="50" r="9"/>
+    <path d="M18 66v10M40 66v6"/>`,
+  motherboard: `
+    <rect x="14" y="14" width="72" height="72" rx="5"/>
+    <rect x="28" y="28" width="20" height="20" rx="2"/>
+    <path d="M58 28h16M58 38h16M58 48h10"/>
+    <path d="M28 60h46M28 70h30"/>`,
+  patch_cable: `
+    <path d="M22 30h14v14a10 10 0 0 1-10 10h-4"/>
+    <rect x="14" y="16" width="30" height="16" rx="3"/>
+    <path d="M78 70H64V56a10 10 0 0 1 10-10h4"/>
+    <rect x="56" y="68" width="30" height="16" rx="3"/>
+    <path d="M22 54c22 0 34-8 56-8"/>`,
+  patch_panel: `
+    <rect x="8" y="36" width="84" height="28" rx="3"/>
+    <rect x="18" y="44" width="10" height="12" rx="1.5"/>
+    <rect x="34" y="44" width="10" height="12" rx="1.5"/>
+    <rect x="50" y="44" width="10" height="12" rx="1.5"/>
+    <rect x="66" y="44" width="10" height="12" rx="1.5"/>`,
+  utp_roll: `
+    <circle cx="50" cy="50" r="32"/>
+    <circle cx="50" cy="50" r="12"/>
+    <path d="M50 18v12M50 70v12M18 50h12M70 50h12"/>`,
+  antenna: `
+    <path d="M50 24v56"/>
+    <path d="M36 34a20 20 0 0 1 28 0"/>
+    <path d="M28 24a32 32 0 0 1 44 0"/>
+    <path d="M38 80h24"/>`,
+  webcam: `
+    <circle cx="50" cy="42" r="24"/>
+    <circle cx="50" cy="42" r="9"/>
+    <path d="M30 70h40l6 14H24z"/>`,
+  mount: `
+    <rect x="10" y="24" width="12" height="52" rx="2"/>
+    <path d="M22 50h20"/>
+    <rect x="42" y="28" width="46" height="34" rx="4"/>
+    <path d="M16 76h50"/>`,
+  scanner: `
+    <rect x="10" y="46" width="80" height="26" rx="5"/>
+    <rect x="24" y="20" width="52" height="26" rx="3"/>
+    <path d="M34 30h32"/>
+    <path d="M24 60h44"/>`,
+  charger: `
+    <rect x="30" y="26" width="40" height="40" rx="6"/>
+    <path d="M42 26V14M58 26V14"/>
+    <path d="M50 66v10a8 8 0 0 0 8 8h8"/>`,
+  disc: `
+    <circle cx="50" cy="50" r="34"/>
+    <circle cx="50" cy="50" r="10"/>
+    <path d="M50 16a34 34 0 0 1 30 18"/>`,
+  joystick: `
+    <rect x="14" y="40" width="72" height="34" rx="16"/>
+    <path d="M30 50v14M23 57h14"/>
+    <circle cx="68" cy="53" r="3.5"/><circle cx="76" cy="62" r="3.5"/>`,
+  smartwatch: `
+    <rect x="32" y="28" width="36" height="44" rx="8"/>
+    <path d="M40 28V14h20v14M40 72v14h20V72"/>
+    <path d="M68 44h6"/>`,
+  air_conditioner: `
+    <rect x="10" y="26" width="80" height="30" rx="6"/>
+    <path d="M20 44h60"/>
+    <path d="M30 62c0 8 6 8 6 16M50 62c0 8 6 8 6 16M70 62c0 8 6 8 6 16"/>`,
+  ebike: `
+    <circle cx="24" cy="66" r="16"/>
+    <circle cx="76" cy="66" r="16"/>
+    <path d="M24 66l16-30h20l16 30"/>
+    <path d="M40 36h24"/>
+    <path d="M56 36l-6 30"/>`,
+  sewing: `
+    <path d="M14 30h56a10 10 0 0 1 10 10v10"/>
+    <path d="M14 30v34h20"/>
+    <path d="M80 50v22"/>
+    <path d="M34 72h52"/>
+    <path d="M80 56v10"/>`,
+  software: `
+    <rect x="14" y="20" width="72" height="50" rx="5"/>
+    <path d="M14 34h72"/>
+    <circle cx="24" cy="27" r="2.5"/><circle cx="33" cy="27" r="2.5"/>
+    <path d="M34 48l-8 8 8 8M62 48l8 8-8 8"/>
+    <path d="M36 80h28"/>`,
+  battery: `
+    <rect x="12" y="34" width="66" height="32" rx="6"/>
+    <path d="M78 44h8v12h-8"/>
+    <path d="M24 44v12M36 44v12M48 44v12"/>`,
+  rack: `
+    <rect x="20" y="12" width="60" height="76" rx="4"/>
+    <path d="M20 32h60M20 52h60M20 72h60"/>
+    <circle cx="32" cy="22" r="2.5"/><circle cx="32" cy="42" r="2.5"/><circle cx="32" cy="62" r="2.5"/>`,
+  phone_accessory: `
+    <rect x="30" y="10" width="40" height="70" rx="7"/>
+    <path d="M42 18h16"/>
+    <path d="M22 88h56"/>
+    <path d="M50 80v8"/>`,
   card: `
     <rect x="12" y="30" width="76" height="42" rx="5"/>
     <path d="M12 44h76"/>

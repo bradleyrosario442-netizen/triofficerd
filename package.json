@@ -7,7 +7,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "placeholders": "node scripts/generate-placeholders.mjs"
+    "placeholders": "node scripts/generate-placeholders.mjs",
+    "catalog": "node scripts/import-catalog.mjs && node scripts/build-brands.mjs"
   },
   "dependencies": {
     "next": "^15.5.23",

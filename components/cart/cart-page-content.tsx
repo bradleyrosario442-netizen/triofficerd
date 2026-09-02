@@ -7,7 +7,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { QuantityInput } from "@/components/ui/quantity";
 import { site } from "@/lib/data/site";
-import { getBrandName } from "@/lib/services/catalog";
+import { brandName } from "@/lib/data/catalog-meta";
 import { amountToFreeShipping } from "@/lib/services/pricing";
 import { useCart } from "@/lib/store/cart-context";
 import { useQuote } from "@/lib/store/quote-context";
@@ -93,7 +93,7 @@ export function CartPageContent() {
                   </Link>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">
-                      {getBrandName(item.brand)}
+                      {brandName(item.brand)}
                     </p>
                     <Link
                       href={`/producto/${item.slug}`}

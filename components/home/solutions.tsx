@@ -16,10 +16,10 @@ export const solutions: Solution[] = [
     href: "/categoria/tecnologia",
   },
   {
-    icon: "settings",
-    title: "Equipamiento de oficina",
-    text: "Encuadernado, corte, plastificado y destrucción de documentos.",
-    href: "/categoria/equipos-de-oficina",
+    icon: "shield",
+    title: "Seguridad electrónica",
+    text: "Cámaras, grabadores NVR y accesorios de videovigilancia.",
+    href: "/categoria/tecnologia/camaras-de-seguridad",
   },
   {
     icon: "printer",
@@ -30,20 +30,14 @@ export const solutions: Solution[] = [
   {
     icon: "sofa",
     title: "Mobiliario corporativo",
-    text: "Estaciones de trabajo, almacenamiento y salas de reunión.",
+    text: "Escritorios, sillas y almacenamiento para espacios de trabajo.",
     href: "/categoria/mobiliario",
   },
   {
     icon: "clipboard",
-    title: "Suministros de oficina",
-    text: "Papelería, archivo y escritura para reposición constante.",
-    href: "/categoria/materiales-de-oficina",
-  },
-  {
-    icon: "sparkles",
-    title: "Artículos de limpieza",
-    text: "Productos y desechables para el mantenimiento de las instalaciones.",
-    href: "/categoria/limpieza",
+    title: "Equipamiento de oficina",
+    text: "Cajas registradoras, climatización y equipos de apoyo administrativo.",
+    href: "/categoria/equipos-de-oficina",
   },
   {
     icon: "refresh",

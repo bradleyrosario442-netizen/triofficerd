@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/product/product-actions";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductGrid } from "@/components/product/product-grid";
-import { AvailabilityLabel, PriceTag } from "@/components/product/price";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Icon } from "@/components/ui/icon";
 import { Container, Section, SectionHeading } from "@/components/ui/section";
@@ -14,18 +13,22 @@ import {
   getCategory,
   getCategorySiblings,
   getProductBySlug,
-  getProducts,
   getRelatedProducts,
   getSubcategory,
 } from "@/lib/services/catalog";
-import { formatCurrency } from "@/lib/utils/format";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * El catálogo tiene miles de fichas, así que no se prerenderizan todas: la
+ * primera visita construye la página y queda cacheada.
+ */
+export const dynamicParams = true;
+
 export function generateStaticParams() {
-  return getProducts().map((product) => ({ slug: product.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -33,35 +36,39 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
 
+  const brandName = getBrandName(product.brand);
+  const categoryName = getSubcategory(product.category, product.subcategory)?.name ?? "";
+  const description = `${brandName} ${product.name}. ${categoryName} disponible por cotización en ${site.name}, República Dominicana.`;
+
   return {
-    title: product.name,
-    description: product.shortDescription,
+    title: `${brandName} ${product.name}`,
+    description,
     alternates: { canonical: `/producto/${product.slug}` },
     openGraph: {
       type: "website",
-      title: `${product.name} | Tri Office`,
-      description: product.shortDescription,
+      title: `${brandName} ${product.name} | ${site.name}`,
+      description,
       url: `/producto/${product.slug}`,
       images: [{ url: product.images[0] }],
     },
   };
 }
 
-const deliveryNotes = [
+const notes = [
+  {
+    icon: "quote" as const,
+    title: "Precio por cotización",
+    text: "El precio depende de la cantidad y la configuración solicitada.",
+  },
   {
     icon: "truck" as const,
     title: "Entrega en todo el país",
-    text: "Coordinamos el despacho a Santo Domingo y el interior según disponibilidad.",
-  },
-  {
-    icon: "box" as const,
-    title: "Retiro en tienda",
-    text: "Puedes retirar tu pedido en nuestra sucursal de Santo Domingo Este.",
+    text: "Coordinamos el despacho a Santo Domingo y al interior.",
   },
   {
     icon: "shield" as const,
     title: "Garantía del fabricante",
-    text: "Los equipos incluyen la garantía indicada por cada fabricante.",
+    text: "Los equipos incluyen la garantía que indica cada fabricante.",
   },
 ];
 
@@ -76,30 +83,16 @@ export default async function ProductPage({ params }: PageProps) {
   const related = getRelatedProducts(product, 4);
   const siblings = getCategorySiblings(product, 4);
 
+  // Sin precio publicado no se declara `offers`: el dato no existe.
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
-    sku: product.sku,
+    ...(product.sku && product.sku !== "—" ? { sku: product.sku, mpn: product.sku } : {}),
     brand: { "@type": "Brand", name: brandName },
     image: product.images.map((image) => `${site.url}${image}`),
-    category: category?.name,
-    ...(product.price !== null
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: product.price,
-            priceCurrency: site.currency,
-            availability:
-              product.availability === "out_of_stock"
-                ? "https://schema.org/OutOfStock"
-                : "https://schema.org/InStock",
-            url: `${site.url}/producto/${product.slug}`,
-            seller: { "@type": "Organization", name: site.name },
-          },
-        }
-      : {}),
+    category: subcategory?.name ?? category?.name,
+    url: `${site.url}/producto/${product.slug}`,
   };
 
   return (
@@ -113,15 +106,10 @@ export default async function ProductPage({ params }: PageProps) {
         <Container className="py-5">
           <Breadcrumbs
             items={[
-              { label: "Tienda", href: "/tienda" },
+              { label: "Catálogo", href: "/tienda" },
               ...(category ? [{ label: category.name, href: `/categoria/${category.slug}` }] : []),
               ...(category && subcategory
-                ? [
-                    {
-                      label: subcategory.name,
-                      href: `/categoria/${category.slug}/${subcategory.slug}`,
-                    },
-                  ]
+                ? [{ label: subcategory.name, href: `/categoria/${category.slug}/${subcategory.slug}` }]
                 : []),
               { label: product.name },
             ]}
@@ -131,51 +119,37 @@ export default async function ProductPage({ params }: PageProps) {
 
       <Container className="py-8 lg:py-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] lg:gap-12">
-          <div>
-            <ProductGallery product={product} />
-          </div>
+          <ProductGallery product={product} />
 
           <div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <Link
-                href={`/tienda?marca=${product.brand}`}
-                className="text-[12px] font-semibold uppercase tracking-[0.12em] text-brand-600 hover:text-brand-800"
-              >
-                {brandName}
-              </Link>
-              <span className="text-[12px] text-slate-300">|</span>
-              <span className="text-[12px] text-muted">SKU: {product.sku}</span>
-            </div>
+            <Link
+              href={`/tienda?marca=${product.brand}`}
+              className="text-[12px] font-bold uppercase tracking-[0.12em] text-brand-600 hover:text-brand-800"
+            >
+              {brandName}
+            </Link>
 
-            <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-[30px]">
+            <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-[28px]">
               {product.name}
             </h1>
 
-            <p className="mt-3 text-[15px] leading-relaxed text-muted">{product.shortDescription}</p>
-
-            <div className="mt-5">
-              <PriceTag price={product.price} previousPrice={product.previousPrice} size="lg" />
-              {product.price !== null ? (
-                <p className="mt-1 text-[12.5px] text-muted">
-                  Precio en {site.currencySymbol}. Impuestos calculados en el checkout.
-                </p>
-              ) : (
-                <p className="mt-1 text-[12.5px] text-muted">
-                  El precio depende de la configuración y el volumen solicitado.
-                </p>
-              )}
-              <AvailabilityLabel
-                availability={product.availability}
-                showStock
-                stock={product.stock}
-                className="mt-3"
-              />
-            </div>
+            <dl className="mt-5 grid gap-x-6 gap-y-2 text-[14px] sm:grid-cols-2">
+              {product.sku && product.sku !== "—" ? (
+                <div className="flex gap-2">
+                  <dt className="text-muted">Número de parte:</dt>
+                  <dd className="font-medium text-ink">{product.sku}</dd>
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <dt className="text-muted">Categoría:</dt>
+                <dd className="font-medium text-ink">{subcategory?.name ?? category?.name}</dd>
+              </div>
+            </dl>
 
             <ProductActions product={product} />
 
-            <ul className="mt-6 grid gap-3 border-t border-line pt-6 sm:grid-cols-3">
-              {deliveryNotes.map((note) => (
+            <ul className="mt-7 grid gap-3 border-t border-line pt-6 sm:grid-cols-3">
+              {notes.map((note) => (
                 <li key={note.title} className="flex gap-2.5">
                   <Icon name={note.icon} size={18} className="mt-0.5 shrink-0 text-brand-700" />
                   <span>
@@ -190,100 +164,46 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Descripción, características y especificaciones */}
-        <div className="mt-12 grid gap-8 border-t border-line pt-10 lg:grid-cols-[1.25fr_1fr] lg:gap-12">
-          <div>
-            <h2 className="text-lg font-semibold text-ink">Descripción</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted">{product.description}</p>
-
-            {product.features.length > 0 ? (
-              <>
-                <h3 className="mt-7 text-[15px] font-semibold text-ink">Características</h3>
-                <ul className="mt-3 space-y-2">
-                  {product.features.map((feature) => (
-                    <li key={feature} className="flex gap-2.5 text-[14px] leading-relaxed text-muted">
-                      <Icon name="check" size={16} className="mt-1 shrink-0 text-brand-600" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-ink">Especificaciones técnicas</h2>
-            <dl className="mt-3 overflow-hidden rounded-xl border border-line">
-              {product.specifications.map((spec, index) => (
-                <div
-                  key={spec.label}
-                  className={`flex gap-4 px-4 py-3 text-[13.5px] ${
-                    index % 2 === 0 ? "bg-white" : "bg-canvas"
-                  }`}
-                >
-                  <dt className="w-2/5 shrink-0 text-muted">{spec.label}</dt>
-                  <dd className="flex-1 font-medium text-ink">{spec.value}</dd>
-                </div>
-              ))}
-              <div className="flex gap-4 bg-white px-4 py-3 text-[13.5px]">
-                <dt className="w-2/5 shrink-0 text-muted">Categoría</dt>
-                <dd className="flex-1 font-medium text-ink">
-                  {category?.name}
-                  {subcategory ? ` · ${subcategory.name}` : ""}
-                </dd>
-              </div>
-              {product.unit ? (
-                <div className="flex gap-4 bg-canvas px-4 py-3 text-[13.5px]">
-                  <dt className="w-2/5 shrink-0 text-muted">Unidad de venta</dt>
-                  <dd className="flex-1 font-medium text-ink capitalize">{product.unit}</dd>
-                </div>
-              ) : null}
-            </dl>
-
-            <div className="mt-5 rounded-xl border border-line bg-canvas p-5">
-              <h3 className="flex items-center gap-2 text-[14px] font-semibold text-ink">
-                <Icon name="quote" size={17} className="text-brand-700" />
-                ¿Necesitas varias unidades?
-              </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-muted">
-                Para requerimientos por volumen preparamos una cotización con condiciones y tiempos
-                de entrega.
-                {product.price !== null
-                  ? ` Referencia unitaria actual: ${formatCurrency(product.price)}.`
-                  : ""}
-              </p>
-              <Link
-                href="/cotizacion"
-                className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-line bg-white px-4 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300"
+        <div className="mt-12 max-w-3xl border-t border-line pt-10">
+          <h2 className="text-lg font-semibold text-ink">Ficha del producto</h2>
+          <dl className="mt-3 overflow-hidden rounded-2xl border border-line">
+            {product.specifications.map((spec, index) => (
+              <div
+                key={spec.label}
+                className={`flex gap-4 px-4 py-3 text-[13.5px] ${
+                  index % 2 === 0 ? "bg-white" : "bg-canvas"
+                }`}
               >
-                Ir a mi cotización
-                <Icon name="arrow-right" size={15} />
-              </Link>
-            </div>
-          </div>
+                <dt className="w-2/5 shrink-0 text-muted">{spec.label}</dt>
+                <dd className="flex-1 font-medium text-ink">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 text-[13px] leading-relaxed text-muted">
+            Las especificaciones completas se confirman en la cotización, junto con el precio, la
+            disponibilidad y el tiempo de entrega.
+          </p>
         </div>
       </Container>
 
       {related.length > 0 ? (
-        <Section tone="canvas" className="border-t border-line">
+        <Section tone="canvas" padding="compact" className="border-t border-line">
           <Container>
-            <SectionHeading
-              title="Productos relacionados"
-              description="Otras opciones dentro de la misma línea."
-            />
+            <SectionHeading title="Productos relacionados" className="mb-6" />
             <ProductGrid products={related} />
           </Container>
         </Section>
       ) : null}
 
       {siblings.length > 0 ? (
-        <Section>
+        <Section padding="compact">
           <Container>
             <SectionHeading
               title={`Más en ${category?.name ?? "esta categoría"}`}
               action={
                 category ? { href: `/categoria/${category.slug}`, label: "Ver la categoría" } : undefined
               }
+              className="mb-6"
             />
             <ProductGrid products={siblings} />
           </Container>

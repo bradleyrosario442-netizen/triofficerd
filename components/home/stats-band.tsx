@@ -1,15 +1,18 @@
 import { Icon, type IconGlyph } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
 
-const stats: { icon: IconGlyph; value: string; label: string }[] = [
-  { icon: "box", value: "7", label: "Líneas de producto" },
-  { icon: "grid", value: "95", label: "Subcategorías" },
-  { icon: "building", value: "B2B", label: "Cotización empresarial" },
-  { icon: "headset", value: "Lun–Sáb", label: "Atención comercial" },
-];
+function statsFor(total: number, brands: number): { icon: IconGlyph; value: string; label: string }[] {
+  return [
+    { icon: "box", value: total.toLocaleString("es-DO"), label: "Productos en catálogo" },
+    { icon: "award", value: String(brands), label: "Marcas representadas" },
+    { icon: "grid", value: "5", label: "Líneas de producto" },
+    { icon: "headset", value: "B2B", label: "Cotización empresarial" },
+  ];
+}
 
 /** Franja de cifras sobre degradado de marca. */
-export function StatsBand() {
+export function StatsBand({ total, brands }: { total: number; brands: number }) {
+  const stats = statsFor(total, brands);
   return (
     <Container className="py-4">
       <div className="overflow-hidden rounded-3xl bg-linear-to-r from-brand-800 via-brand-700 to-brand-600">

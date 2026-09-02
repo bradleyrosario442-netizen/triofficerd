@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     "tecnología empresarial",
     "mobiliario de oficina",
     "impresión",
-    "artículos de limpieza",
+    "equipos de oficina",
     "útiles escolares",
     "República Dominicana",
   ],

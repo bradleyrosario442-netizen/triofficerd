@@ -14,7 +14,6 @@ interface ShopToolbarProps {
   view: "grid" | "list";
   categories: Category[];
   brands: Brand[];
-  priceRange: { min: number; max: number };
   lockedCategory?: string;
   activeFilterCount: number;
 }
@@ -25,7 +24,6 @@ export function ShopToolbar({
   view,
   categories,
   brands,
-  priceRange,
   lockedCategory,
   activeFilterCount,
 }: ShopToolbarProps) {
@@ -45,7 +43,7 @@ export function ShopToolbar({
     };
   }, [drawerOpen]);
 
-  const currentSort = searchParams.get("orden") ?? "destacados";
+  const currentSort = searchParams.get("orden") ?? "relevancia";
 
   const update = (updates: Record<string, string | string[] | null>) => {
     router.push(`${pathname}${buildQuery(searchParams, updates)}`, { scroll: false });
@@ -141,7 +139,6 @@ export function ShopToolbar({
               <FiltersPanel
                 categories={categories}
                 brands={brands}
-                priceRange={priceRange}
                 lockedCategory={lockedCategory}
               />
             </div>

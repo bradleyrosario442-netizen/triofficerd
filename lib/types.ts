@@ -170,15 +170,11 @@ export interface ProductFilters {
   category?: string;
   subcategory?: string;
   brands?: string[];
-  minPrice?: number;
-  maxPrice?: number;
-  availability?: ProductAvailability[];
-  kinds?: ProductKind[];
   query?: string;
-  onSale?: boolean;
 }
 
-export type SortKey = "featured" | "newest" | "price_asc" | "price_desc" | "bestsellers";
+/** El catálogo es de cotización: se ordena por nombre o marca, no por precio. */
+export type SortKey = "relevance" | "name_asc" | "name_desc" | "brand";
 
 export interface Paginated<T> {
   items: T[];

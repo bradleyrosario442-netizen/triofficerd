@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ProductBadges } from "@/components/product/price";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils/format";
 
@@ -21,7 +20,6 @@ export function ProductGallery({ product }: { product: Product }) {
           sizes="(max-width: 1024px) 100vw, 620px"
           className="animate-fade-in object-cover"
         />
-        <ProductBadges product={product} className="absolute left-4 top-4" />
       </div>
 
       {product.images.length > 1 ? (

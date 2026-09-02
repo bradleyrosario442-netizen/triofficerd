@@ -25,7 +25,7 @@ const values: { icon: IconGlyph; title: string; text: string }[] = [
 const reasons = [
   {
     title: "Un solo proveedor para toda la operación",
-    text: "Tecnología, mobiliario, impresión, suministros, limpieza y escolares en un mismo catálogo.",
+    text: "Tecnología, impresión, equipos de oficina, mobiliario y escolares en un mismo catálogo.",
   },
   {
     title: "Atención comercial dedicada",

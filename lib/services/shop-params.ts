@@ -1,9 +1,11 @@
-import type { ProductAvailability, ProductFilters, ProductKind, SortKey } from "@/lib/types";
+import type { ProductFilters, SortKey } from "@/lib/types";
 
 /**
  * Traducción entre la URL y el estado del catálogo.
- * Mantener los filtros en la URL hace que cada vista sea enlazable,
- * indexable y compartible.
+ *
+ * Mantener los filtros en la URL hace que cada vista sea enlazable, indexable
+ * y compartible. El catálogo es de cotización, así que no hay parámetros de
+ * precio ni de oferta.
  */
 
 export type RawParams = Record<string, string | string[] | undefined>;
@@ -18,33 +20,14 @@ export interface ShopState {
     categoria: string;
     subcategoria: string;
     marcas: string[];
-    min: string;
-    max: string;
-    disponibilidad: string[];
-    tipo: string[];
-    oferta: boolean;
   };
 }
 
 export const sortOptions: { value: SortKey; param: string; label: string }[] = [
-  { value: "featured", param: "destacados", label: "Destacados" },
-  { value: "newest", param: "recientes", label: "Más recientes" },
-  { value: "price_asc", param: "precio-menor", label: "Precio: menor a mayor" },
-  { value: "price_desc", param: "precio-mayor", label: "Precio: mayor a menor" },
-  { value: "bestsellers", param: "mas-vendidos", label: "Más vendidos" },
-];
-
-export const availabilityOptions: { value: ProductAvailability; param: string; label: string }[] = [
-  { value: "in_stock", param: "disponible", label: "Disponible" },
-  { value: "low_stock", param: "pocas-unidades", label: "Últimas unidades" },
-  { value: "on_request", param: "bajo-pedido", label: "Bajo pedido" },
-  { value: "out_of_stock", param: "agotado", label: "Agotado" },
-];
-
-export const kindOptions: { value: ProductKind; param: string; label: string }[] = [
-  { value: "retail", param: "general", label: "Venta directa" },
-  { value: "corporate", param: "empresarial", label: "Empresarial / proyecto" },
-  { value: "consumable", param: "consumible", label: "Consumible / reposición" },
+  { value: "relevance", param: "relevancia", label: "Relevancia" },
+  { value: "name_asc", param: "nombre-az", label: "Nombre: A – Z" },
+  { value: "name_desc", param: "nombre-za", label: "Nombre: Z – A" },
+  { value: "brand", param: "marca", label: "Marca" },
 ];
 
 function toList(value: string | string[] | undefined): string[] {
@@ -66,24 +49,10 @@ export function parseShopParams(params: RawParams): ShopState {
   const categoria = first(params.categoria);
   const subcategoria = first(params.subcategoria);
   const marcas = toList(params.marca);
-  const min = first(params.min);
-  const max = first(params.max);
-  const disponibilidad = toList(params.disponibilidad);
-  const tipo = toList(params.tipo);
-  const oferta = first(params.oferta) === "1";
 
-  const sort =
-    sortOptions.find((option) => option.param === first(params.orden))?.value ?? "featured";
+  const sort = sortOptions.find((option) => option.param === first(params.orden))?.value ?? "relevance";
   const view = first(params.vista) === "lista" ? "list" : "grid";
   const page = Math.max(1, Number.parseInt(first(params.pagina) || "1", 10) || 1);
-
-  const availability = disponibilidad
-    .map((param) => availabilityOptions.find((option) => option.param === param)?.value)
-    .filter((value): value is ProductAvailability => Boolean(value));
-
-  const kinds = tipo
-    .map((param) => kindOptions.find((option) => option.param === param)?.value)
-    .filter((value): value is ProductKind => Boolean(value));
 
   return {
     filters: {
@@ -91,16 +60,11 @@ export function parseShopParams(params: RawParams): ShopState {
       category: categoria || undefined,
       subcategory: subcategoria || undefined,
       brands: marcas.length ? marcas : undefined,
-      minPrice: min ? Number(min) : undefined,
-      maxPrice: max ? Number(max) : undefined,
-      availability: availability.length ? availability : undefined,
-      kinds: kinds.length ? kinds : undefined,
-      onSale: oferta || undefined,
     },
     sort,
     view,
     page,
-    raw: { q, categoria, subcategoria, marcas, min, max, disponibilidad, tipo, oferta },
+    raw: { q, categoria, subcategoria, marcas },
   };
 }
 
@@ -128,4 +92,4 @@ export function buildQuery(
   return query ? `?${query}` : "";
 }
 
-export const PAGE_SIZE = 12;
+export const PAGE_SIZE = 24;

@@ -87,12 +87,17 @@ export function getProducts(): Product[] {
   return products;
 }
 
+/** Índices por slug e id: el catálogo tiene miles de entradas y las fichas
+ *  se renderizan bajo demanda, así que no conviene recorrerlo en cada visita. */
+const bySlug = new Map(products.map((product) => [product.slug, product]));
+const byId = new Map(products.map((product) => [product.id, product]));
+
 export function getProductBySlug(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
+  return bySlug.get(slug);
 }
 
 export function getProductById(id: string): Product | undefined {
-  return products.find((p) => p.id === id);
+  return byId.get(id);
 }
 
 export function getProductsByIds(ids: string[]): Product[] {
@@ -100,22 +105,47 @@ export function getProductsByIds(ids: string[]): Product[] {
   return products.filter((p) => set.has(p.id));
 }
 
+/**
+ * Selección para la portada.
+ *
+ * El catálogo es de cotización: no hay ofertas, ni más vendidos, ni fechas de
+ * alta reales. Para que las secciones muestren variedad en lugar de las
+ * primeras filas del archivo, se toma un producto por subcategoría en rotación.
+ */
+function spread(limit: number, offset = 0): Product[] {
+  const bySub = new Map<string, Product[]>();
+  for (const product of products) {
+    const list = bySub.get(product.subcategory) ?? [];
+    list.push(product);
+    bySub.set(product.subcategory, list);
+  }
+
+  const groups = [...bySub.values()];
+  const picked: Product[] = [];
+  for (let round = 0; picked.length < limit && round < 40; round += 1) {
+    for (const group of groups) {
+      const item = group[(round + offset) % group.length];
+      if (item && !picked.includes(item)) picked.push(item);
+      if (picked.length === limit) break;
+    }
+  }
+  return picked;
+}
+
 export function getFeaturedProducts(limit = 8): Product[] {
-  return products.filter((p) => p.featured).slice(0, limit);
+  return spread(limit, 0);
 }
 
 export function getNewArrivals(limit = 8): Product[] {
-  return [...products]
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .slice(0, limit);
+  return spread(limit, 1);
 }
 
 export function getOnSaleProducts(limit = 8): Product[] {
-  return products.filter((p) => p.sale).slice(0, limit);
+  return spread(limit, 2);
 }
 
 export function getBestsellers(limit = 8): Product[] {
-  return products.filter((p) => p.bestseller).slice(0, limit);
+  return spread(limit, 3);
 }
 
 export function getProductsByCategory(categorySlug: string, limit?: number): Product[] {
@@ -137,14 +167,6 @@ export function getCategorySiblings(product: Product, limit = 8): Product[] {
   return products
     .filter((p) => p.id !== product.id && p.category === product.category)
     .slice(0, limit);
-}
-
-/** Rango de precios disponible, para el filtro del catálogo. */
-export function getPriceRange(categorySlug?: string): { min: number; max: number } {
-  const scope = categorySlug ? products.filter((p) => p.category === categorySlug) : products;
-  const prices = scope.map((p) => p.price).filter((p): p is number => typeof p === "number");
-  if (!prices.length) return { min: 0, max: 0 };
-  return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
 }
 
 /* -------------------------- Filtrado y ordenado ------------------------- */
@@ -171,12 +193,6 @@ export function filterProducts(filters: ProductFilters): Product[] {
     if (filters.category && product.category !== filters.category) return false;
     if (filters.subcategory && product.subcategory !== filters.subcategory) return false;
     if (filters.brands?.length && !filters.brands.includes(product.brand)) return false;
-    if (filters.availability?.length && !filters.availability.includes(product.availability)) return false;
-    if (filters.kinds?.length && !filters.kinds.includes(product.kind)) return false;
-    if (filters.onSale && !product.sale) return false;
-    if (typeof filters.minPrice === "number" && (product.price ?? 0) < filters.minPrice) return false;
-    if (typeof filters.maxPrice === "number" && product.price !== null && product.price > filters.maxPrice)
-      return false;
     if (filters.query && !matchesQuery(product, filters.query)) return false;
     return true;
   });
@@ -184,20 +200,18 @@ export function filterProducts(filters: ProductFilters): Product[] {
 
 export function sortProducts(list: Product[], sort: SortKey): Product[] {
   const items = [...list];
+  const byName = (a: Product, b: Product) => a.name.localeCompare(b.name, "es");
+
   switch (sort) {
-    case "newest":
-      return items.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-    case "price_asc":
-      return items.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-    case "price_desc":
-      return items.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
-    case "bestsellers":
-      return items.sort((a, b) => Number(b.bestseller) - Number(a.bestseller));
-    case "featured":
+    case "name_asc":
+      return items.sort(byName);
+    case "name_desc":
+      return items.sort((a, b) => byName(b, a));
+    case "brand":
+      return items.sort((a, b) => a.brand.localeCompare(b.brand, "es") || byName(a, b));
+    case "relevance":
     default:
-      return items.sort(
-        (a, b) => Number(b.featured) - Number(a.featured) || Number(b.bestseller) - Number(a.bestseller),
-      );
+      return items;
   }
 }
 
@@ -249,8 +263,6 @@ export function search(rawQuery: string, limit = 6): SearchResults {
       if (matches(brandName)) score += 3;
       if (matches(subName)) score += 2;
       if (matches(product.sku)) score += 5;
-      if (product.featured) score += 1;
-      if (product.bestseller) score += 1;
       return { product, score };
     })
     .filter((entry): entry is { product: Product; score: number } => entry !== null)

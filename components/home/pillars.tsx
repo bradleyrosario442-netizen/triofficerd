@@ -5,12 +5,12 @@ const pillars: { icon: IconGlyph; title: string; text: string }[] = [
   {
     icon: "box",
     title: "Catálogo completo",
-    text: "Siete líneas que cubren toda la operación, de la laptop al galón de cloro.",
+    text: "Cinco líneas: cómputo, redes, impresión, mobiliario y escolares.",
   },
   {
     icon: "quote",
     title: "Cotización por volumen",
-    text: "Arma la lista y recibe una propuesta consolidada con precios y plazos.",
+    text: "Arma tu lista y recibe una propuesta con precios, plazos y disponibilidad.",
   },
   {
     icon: "truck",
