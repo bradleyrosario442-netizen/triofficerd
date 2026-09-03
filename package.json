@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "placeholders": "node scripts/generate-placeholders.mjs",
-    "catalog": "node scripts/import-catalog.mjs && node scripts/build-brands.mjs"
+    "catalog": "node scripts/import-catalog.mjs && node scripts/build-brands.mjs",
+    "imagenes": "node scripts/build-images.mjs"
   },
   "dependencies": {
     "next": "^15.5.23",

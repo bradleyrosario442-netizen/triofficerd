@@ -3,15 +3,32 @@ import Link from "next/link";
 import { PillLink } from "@/components/ui/pill-button";
 import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
+import catalogImages from "@/data/product-images.json";
 import type { Product } from "@/lib/types";
 
-/** Piezas del collage: trazo sin fondo, con tamaño, posición y ritmo propios. */
-const collage = [
-  { src: "/img/hero/laptop.svg", className: "left-[4%] top-[6%] w-[58%] z-20", delay: "0s" },
-  { src: "/img/hero/exec_chair.svg", className: "right-[2%] top-0 w-[34%] z-10", delay: "1.4s" },
-  { src: "/img/hero/printer.svg", className: "right-[8%] bottom-[4%] w-[32%] z-30", delay: "2.6s" },
-  { src: "/img/hero/toner.svg", className: "left-[2%] top-[52%] w-[19%] z-30", delay: "3.6s" },
+/** Posición, tamaño y ritmo de cada pieza del collage. */
+const layout = [
+  { className: "left-[4%] top-[6%] w-[58%] z-20", delay: "0s" },
+  { className: "right-[2%] top-0 w-[34%] z-10", delay: "1.4s" },
+  { className: "right-[8%] bottom-[4%] w-[32%] z-30", delay: "2.6s" },
+  { className: "left-[2%] top-[52%] w-[19%] z-30", delay: "3.6s" },
 ];
+
+/** Ilustraciones de respaldo mientras no haya fotografías cargadas. */
+const fallback = [
+  "/img/hero/laptop.svg",
+  "/img/hero/exec_chair.svg",
+  "/img/hero/printer.svg",
+  "/img/hero/toner.svg",
+];
+
+/**
+ * Las piezas salen de public/img/hero/fotos si hay archivos ahí; si no, de las
+ * ilustraciones. Se usan tantas como imágenes existan, hasta cuatro.
+ */
+const heroPhotos = (catalogImages as { hero: string[] }).hero;
+const sources = heroPhotos.length > 0 ? heroPhotos.slice(0, 4) : fallback;
+const collage = sources.map((src, index) => ({ src, ...layout[index] }));
 
 export function Hero({ deal, total }: { deal?: Product; total: number }) {
   return (

@@ -1,0 +1,21 @@
+COLLAGE DEL HERO
+================
+
+Las imágenes que flotan en la portada. Deja de 2 a 4 archivos aquí.
+
+  1-laptop.png
+  2-impresora.png
+  3-silla.png
+  4-toner.png
+
+El número inicial define el orden: la primera es la pieza grande de la
+izquierda, las siguientes se acomodan alrededor.
+
+IMPORTANTE: fondo transparente (PNG o WebP). Una foto con fondo blanco se
+verá como un recuadro pegado, no como un objeto flotando.
+
+Después de copiar los archivos, ejecuta:
+
+  npm run imagenes
+
+Si esta carpeta está vacía, la portada usa las ilustraciones.

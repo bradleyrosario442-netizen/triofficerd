@@ -182,14 +182,45 @@ fuente: el árbol de categorías se deriva de ese mapa.
 
 ### Imágenes
 
-Las fichas usan ilustraciones vectoriales por tipo de producto, generadas
-localmente en `public/img/products/`. Son un marcador de posición: las
-fotografías reales entran cambiando `imagesFor()` en `lib/data/products.ts`.
+Mientras no haya fotografías, cada producto muestra la ilustración vectorial
+que corresponde a su tipo. Para cargar fotos reales:
 
-Con el número de parte del fabricante ya en el catálogo, la vía correcta para
-las fotos oficiales es un servicio de contenido para revendedores —Icecat, por
-ejemplo—, que las entrega con licencia de uso. No se descargan imágenes de
-terceros sin esa autorización.
+1. Deja los archivos en `public/img/fotos/`, nombrados con el **número de parte
+   del fabricante** o con el identificador del producto. Mayúsculas, guiones y
+   guiones bajos son indiferentes:
+
+   ```
+   7MD68A.webp        → HP Impresora LaserJet M111w
+   W1105A.webp        → HP Tóner 105A
+   hp-7md68a.webp     → también funciona
+   ```
+
+2. Ejecuta `npm run imagenes`.
+
+El script asocia cada archivo con su producto, escribe `data/product-images.json`
+y reporta los que no encontraron pareja. Los productos sin foto siguen con su
+ilustración, así que se pueden cargar de a poco.
+
+**El collage de la portada** funciona igual: los archivos van en
+`public/img/hero/fotos/`, de dos a cuatro, **con fondo transparente** (PNG o
+WebP). El número inicial del nombre define el orden. Si la carpeta está vacía se
+usan las ilustraciones.
+
+Formato recomendado: WebP, 1000 × 1000 px, bajo 150 KB.
+
+#### De dónde salen las fotos
+
+Aproximadamente la mitad del catálogo son marcas internacionales —HP, Epson,
+Lenovo, Dell, Canon, Brother, Logitech, TP-Link— con ficha en los catálogos de
+contenido del sector. Con el número de parte ya cargado, un servicio como Icecat
+las entrega con licencia de uso para revendedores.
+
+La otra mitad son marcas de distribuidor o regionales que no publican ficha:
+ahí la vía es el paquete de medios del propio distribuidor o fotografía propia.
+No se descargan imágenes de terceros sin esa autorización.
+
+Si el volumen crece, las fotos van a almacenamiento de objetos en vez del
+repositorio: `next.config.ts` ya tiene el `remotePatterns` preparado.
 
 ---
 

@@ -1,4 +1,5 @@
 import rawCatalog from "@/data/products.json";
+import catalogImages from "@/data/product-images.json";
 import { sourceMap } from "@/lib/data/taxonomy";
 import type { Product } from "@/lib/types";
 import { displayName, titleCase } from "@/lib/utils/product-name";
@@ -32,9 +33,17 @@ export function slugify(value: string): string {
     .slice(0, 80);
 }
 
-/** Ilustración por tipo de producto, tres variantes por subcategoría. */
-function imagesFor(icon: string, seed: number): string[] {
-  return [`/img/products/${icon}-${(seed % 3) + 1}.svg`];
+/** Fotografías cargadas en public/img/fotos, indexadas por producto. */
+const photos = (catalogImages as { productos: Record<string, string> }).productos;
+
+/**
+ * Imagen del producto: la fotografía si está cargada, y si no la ilustración
+ * que corresponde a su tipo. Así el catálogo se ve completo desde el primer
+ * día y las fotos entran de a poco, sin tocar componentes.
+ */
+function imagesFor(id: string, icon: string, seed: number): string[] {
+  const photo = photos[id];
+  return photo ? [photo] : [`/img/products/${icon}-${(seed % 3) + 1}.svg`];
 }
 
 /**
@@ -91,7 +100,7 @@ function buildProducts(): Product[] {
       previousPrice: null,
       stock: 0,
       availability: "on_request",
-      images: imagesFor(entry.icon, index),
+      images: imagesFor(slug, entry.icon, index),
       specifications: [
         { label: "Marca", value: titleCase(brandName) },
         ...(model ? [{ label: "Número de parte", value: model }] : []),

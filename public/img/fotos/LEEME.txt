@@ -1,0 +1,20 @@
+FOTOS DE PRODUCTO
+=================
+
+Deja aquí las fotografías. El nombre del archivo debe ser el número de parte
+del fabricante o el identificador del producto. Mayúsculas, guiones y guiones
+bajos dan igual.
+
+  7MD68A.webp          → HP Impresora LaserJet M111w
+  W1105A.webp          → HP Tóner 105A
+  hp-7md68a.webp       → también funciona
+  TL-SF1005D.jpg       → TP-Link Switch 5 puertos
+
+Formatos: .webp (recomendado), .png, .jpg, .avif
+Tamaño sugerido: 1000 x 1000 px, fondo blanco o transparente, bajo 150 KB.
+
+Después de copiar los archivos, ejecuta:
+
+  npm run imagenes
+
+Los productos sin foto siguen mostrando su ilustración.
