@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
 import { site } from "@/lib/data/site";
+import { jsonLd } from "@/lib/utils/json-ld";
 
 export const metadata: Metadata = {
   title: "Preguntas frecuentes",
@@ -71,7 +72,7 @@ export default function PreguntasFrecuentesPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(faqJsonLd) }}
       />
 
       <div className="border-b border-line bg-canvas">

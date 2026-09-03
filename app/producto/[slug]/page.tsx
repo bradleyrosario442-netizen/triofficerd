@@ -16,6 +16,7 @@ import {
   getRelatedProducts,
   getSubcategory,
 } from "@/lib/services/catalog";
+import { jsonLd } from "@/lib/utils/json-ld";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -99,7 +100,7 @@ export default async function ProductPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(productJsonLd) }}
       />
 
       <div className="border-b border-line bg-canvas">

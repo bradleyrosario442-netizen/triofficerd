@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
 import { addressLine, site } from "@/lib/data/site";
 import { mailHref, telHref, whatsappGeneral } from "@/lib/utils/whatsapp";
+import { jsonLd } from "@/lib/utils/json-ld";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -32,7 +33,7 @@ export default function ContactoPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(localBusinessJsonLd) }}
       />
 
       <div className="border-b border-line bg-canvas">

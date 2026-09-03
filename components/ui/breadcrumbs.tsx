@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { site } from "@/lib/data/site";
+import { jsonLd } from "@/lib/utils/json-ld";
 
 export interface Crumb {
   label: string;
@@ -11,7 +12,7 @@ export interface Crumb {
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   const trail: Crumb[] = [{ label: "Inicio", href: "/" }, ...items];
 
-  const jsonLd = {
+  const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: trail.map((crumb, index) => ({
@@ -26,7 +27,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
     <nav aria-label="Ruta de navegación" className="text-[13px]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbJsonLd) }}
       />
       <ol className="flex flex-wrap items-center gap-1 text-muted">
         {trail.map((crumb, index) => {

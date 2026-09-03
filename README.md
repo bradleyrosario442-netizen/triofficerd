@@ -231,6 +231,60 @@ repositorio: `next.config.ts` ya tiene el `remotePatterns` preparado.
 
 ---
 
+## Seguridad
+
+### Superficie real
+
+No hay autenticación, sesiones, cookies, base de datos ni subida de archivos.
+Los formularios de contacto, cotización y checkout no llegan a ningún servidor:
+`lib/services/orders.ts` genera la referencia en el navegador. La única
+superficie pública que ejecuta código en el servidor es `/api/search`.
+
+### Cabeceras
+
+`next.config.ts` emite las cabeceras para el runtime y `netlify.toml` las repite
+para los archivos que sirve la CDN sin pasar por él. **Ambas listas deben
+mantenerse iguales.**
+
+CSP, HSTS (solo producción), `X-Frame-Options: DENY`, `nosniff`,
+`Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`.
+
+`script-src` admite `'unsafe-inline'` a conciencia: el App Router entrega el
+árbol de React en bloques en línea y bloquearlos rompe la hidratación. La
+alternativa —un nonce por petición desde un middleware— obliga a renderizar
+todo bajo demanda y costaría las 91 páginas estáticas. El razonamiento completo
+está en el comentario de `next.config.ts`. Si algún día se publica contenido de
+usuario, hay que pasar al nonce.
+
+### JSON-LD
+
+`lib/utils/json-ld.ts` escapa `<`, `>`, `&`, U+2028 y U+2029 antes de inyectar
+datos estructurados en un `<script>`. `JSON.stringify` no lo hace, y los textos
+del catálogo vienen de una fuente externa: un nombre de producto con `</script>`
+bastaría para ejecutar código en cada visita. **Todo JSON-LD debe pasar por esta
+función, nunca por `JSON.stringify` directo.**
+
+### /api/search
+
+Tres topes: 80 caracteres de consulta, 10 términos y 60 peticiones por minuto
+por IP. Sin ellos, una consulta larga cuyos términos coincidan con casi todo
+obliga a recorrer los 2.862 productos una vez por término.
+
+El limitador vive en la memoria del proceso: en Netlify cada instancia tiene el
+suyo, así que frena el abuso de un cliente pero **no sustituye a un limitador en
+el borde**. Para protección real ante un ataque distribuido hace falta Netlify
+Rate Limiting o un WAF por delante.
+
+### Dependencias
+
+`npm audit` limpio. `postcss` se fija con `overrides` a `^8.5.28`: Next 15
+arrastra 8.4.31, que tiene avisos de XSS y lectura de archivos vía
+`sourceMappingURL`. No son explotables aquí —PostCSS solo procesa CSS propio en
+compilación— pero el override los cierra sin subir a Next 16, que es un cambio
+mayor.
+
+---
+
 ## SEO
 
 - Metadatos por página, Open Graph y canónicas.

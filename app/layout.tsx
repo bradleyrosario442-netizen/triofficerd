@@ -10,6 +10,7 @@ import { Providers } from "@/components/providers";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { site } from "@/lib/data/site";
 import "./globals.css";
+import { jsonLd } from "@/lib/utils/json-ld";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -90,7 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-white antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(organizationJsonLd) }}
         />
         <a
           href="#contenido"

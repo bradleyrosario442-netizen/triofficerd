@@ -1,6 +1,11 @@
 # Despliegue de Tri Office en Netlify.
 # El runtime de Next.js lo instala Netlify automáticamente al detectar el
-# framework; aquí solo se fijan el comando, el directorio y la versión de Node.
+# framework; aquí se fijan el comando, el directorio, la versión de Node y las
+# cabeceras de seguridad.
+#
+# Next también emite estas cabeceras desde `next.config.ts`, pero los archivos
+# estáticos los sirve la CDN sin pasar por el runtime: por eso se declaran
+# también aquí. Ambas listas deben mantenerse iguales.
 
 [build]
   command = "npm run build"
@@ -10,12 +15,27 @@
   NODE_VERSION = "22"
 
 [[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+    X-DNS-Prefetch-Control = "off"
+
+# Las ilustraciones llevan huella en el nombre y no cambian.
+[[headers]]
   for = "/img/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# La búsqueda es pública, pero su respuesta depende de la consulta: no debe
+# quedar guardada en cachés compartidas ni indexarse.
 [[headers]]
-  for = "/*"
+  for = "/api/*"
   [headers.values]
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex"
