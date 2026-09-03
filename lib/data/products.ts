@@ -33,6 +33,47 @@ export function slugify(value: string): string {
     .slice(0, 80);
 }
 
+/**
+ * Normaliza y valida el número de parte del fabricante.
+ *
+ * El campo de origen viene sucio de dos maneras. Unas veces trae el código
+ * real con anotaciones pegadas —"210-BCTG (I7,256SSD)***"— y basta limpiarlo.
+ * Otras trae el código de almacén del proveedor —"NYS-PD-600G4-I5-8-2-2"— o
+ * texto descriptivo: eso no identifica al producto ante ningún fabricante, así
+ * que no se publica y el producto queda sin número de parte.
+ */
+function manufacturerPart(code: string): string {
+  let value = code
+    .replace(/\*+/g, "") // marcas internas pegadas al final
+    .replace(/\s+CANAL\b/i, "") // etiqueta de canal del proveedor
+    .replace(/\s*\([^)]*\)/g, "") // aclaraciones entre paréntesis
+    .trim();
+
+  // Varias referencias en un mismo campo: se toma la primera.
+  if (value.includes("/")) {
+    const first = value.split("/")[0].trim();
+    if (/\d/.test(first) && first.length >= 6) value = first;
+  }
+
+  // Código seguido de descripción: se toma el código si lo parece.
+  if (value.includes(" ")) {
+    const first = value.split(/\s+/)[0];
+    if (/\d/.test(first) && first.length >= 5) value = first;
+  }
+
+  const upper = value.toUpperCase();
+  const rejected =
+    !value ||
+    /^(NYS|N&S|NS-|CNB-|CSI-|SYS-|R-LEN)/.test(upper) ||
+    upper.includes("&") ||
+    upper.endsWith("-") ||
+    value.includes(" ") ||
+    value.length > 24 ||
+    (value.match(/-/g) ?? []).length >= 4;
+
+  return rejected ? "" : value;
+}
+
 /** Fotografías cargadas en public/img/fotos, indexadas por producto. */
 const photos = (catalogImages as { productos: Record<string, string> }).productos;
 
@@ -77,7 +118,7 @@ function buildProducts(): Product[] {
       known.find((candidate) => upperName.includes(candidate.toUpperCase())) ||
       "Genérico";
     const name = displayName(raw.name, 90);
-    const model = raw.model.trim();
+    const model = manufacturerPart(raw.model);
 
     // El slug prioriza marca + modelo, que es lo que identifica al producto.
     const base = slugify(`${brandName} ${model || raw.name}`) || `producto-${index}`;

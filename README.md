@@ -176,6 +176,13 @@ expresiones para esos cuatro datos, así que precios, textos comerciales,
 promociones e inventario no pueden llegar al archivo. En el destino, cada
 producto se construye con `price: null` y `quoteOnly: true`.
 
+El campo `model` se valida antes de publicarse. Unas veces trae el código real
+con anotaciones pegadas —`210-BCTG (I7,256SSD)***`— y basta limpiarlo; otras
+trae el código de almacén del proveedor —`NYS-PD-600G4-I5-8-2-2`— o texto
+descriptivo, que no identifica al producto ante ningún fabricante y no se
+publica. Resultado: 2.646 productos (92,5 %) muestran número de parte; los 216
+restantes no muestran ninguno.
+
 `lib/data/taxonomy.ts` traduce cada categoría de origen a la línea y
 subcategoría de Tri Office, y fija qué ilustración usa el producto. Es la única
 fuente: el árbol de categorías se deriva de ese mapa.
