@@ -202,6 +202,20 @@ que corresponde a su tipo. Para cargar fotos reales:
    hp-7md68a.webp     → también funciona
    ```
 
+   **Varias fotos del mismo producto**: se añade `-1`, `-2`, `-3`. La primera
+   es la que sale en las tarjetas del catálogo; el resto aparece como
+   miniaturas en la ficha, que ya sabe mostrarlas.
+
+   ```
+   7MD68A-1.webp      → frontal, portada del producto
+   7MD68A-2.webp      → lateral
+   7MD68A-3.webp      → detalle del panel
+   ```
+
+   El sufijo se distingue del número de parte porque primero se prueba el
+   nombre completo: `TL-SF1005D.webp` resuelve al switch TP-Link y
+   `TL-SF1005D-2.webp` a su segunda foto.
+
 2. Ejecuta `npm run imagenes`.
 
 El script asocia cada archivo con su producto, escribe `data/product-images.json`

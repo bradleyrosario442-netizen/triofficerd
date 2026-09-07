@@ -13,14 +13,20 @@ const links: { href: string; icon: IconGlyph; label: string }[] = [
   { href: "/contacto", icon: "headset", label: "Contacto" },
 ];
 
-/** Dock flotante de acceso rápido; solo en pantallas anchas. */
+/**
+ * Dock flotante de acceso rápido.
+ *
+ * Aparece a partir de 1536 px: el contenido se detiene en 1280 px, así que por
+ * debajo de ese ancho el dock se montaría encima de la columna izquierda —y
+ * tapaba las miniaturas de la galería de producto—.
+ */
 export function SideDock() {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="Accesos rápidos"
-      className="pointer-events-none fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 xl:block"
+      className="pointer-events-none fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 2xl:block"
     >
       <ul className="pointer-events-auto flex flex-col gap-1 rounded-full border border-line bg-white/90 p-2 shadow-lift backdrop-blur">
         {links.map((link) => {

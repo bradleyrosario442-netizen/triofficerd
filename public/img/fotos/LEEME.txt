@@ -1,20 +1,44 @@
 FOTOS DE PRODUCTO
 =================
 
-Deja aquí las fotografías. El nombre del archivo debe ser el número de parte
-del fabricante o el identificador del producto. Mayúsculas, guiones y guiones
-bajos dan igual.
+UNA FOTO
+--------
+El nombre del archivo debe ser el número de parte del fabricante —el mismo
+que aparece en la tarjeta bajo "Parte:"— o el identificador del producto.
+Mayúsculas, guiones y guiones bajos dan igual.
 
-  7MD68A.webp          → HP Impresora LaserJet M111w
-  W1105A.webp          → HP Tóner 105A
-  hp-7md68a.webp       → también funciona
-  TL-SF1005D.jpg       → TP-Link Switch 5 puertos
+  7MD68A.webp          -> HP Impresora LaserJet M111w
+  W1105A.webp          -> HP Toner 105A
+  hp-7md68a.webp       -> tambien funciona
 
-Formatos: .webp (recomendado), .png, .jpg, .avif
-Tamaño sugerido: 1000 x 1000 px, fondo blanco o transparente, bajo 150 KB.
+VARIAS FOTOS DEL MISMO PRODUCTO
+-------------------------------
+Se agrega -1, -2, -3 al final. La PRIMERA es la que sale en las tarjetas
+del catalogo; las demas aparecen como miniaturas en la ficha del producto.
 
-Después de copiar los archivos, ejecuta:
+  7MD68A-1.webp        -> frontal (portada del producto)
+  7MD68A-2.webp        -> lateral
+  7MD68A-3.webp        -> detalle del panel
 
+Funciona igual con numeros de parte que ya llevan guiones:
+
+  TL-SF1005D-1.webp    -> primera foto del switch TP-Link
+  TL-SF1005D-2.webp    -> segunda foto
+
+No hay limite de fotos por producto, pero 3 o 4 suele ser suficiente.
+
+FORMATO
+-------
+.webp (recomendado), .png, .jpg, .avif
+1000 x 1000 px, fondo blanco o transparente, por debajo de 150 KB.
+Todas las fotos de un mismo producto deben tener la misma proporcion,
+para que las miniaturas no se vean desalineadas.
+
+DESPUES DE COPIAR LOS ARCHIVOS
+------------------------------
   npm run imagenes
 
-Los productos sin foto siguen mostrando su ilustración.
+El comando dice cuantas encontraron pareja, cuantas galerias se armaron y
+lista por nombre las que no coincidieron con ningun producto.
+
+Los productos sin foto siguen mostrando su ilustracion.
