@@ -58,6 +58,13 @@ export default async function AdminHomePage() {
           y no llegan al sitio publicado.
         </Notice>
       ) : null}
+      {storageKind === "snapshot" ? (
+        <Notice tone="warn">
+          Netlify Blobs no está disponible en este entorno, así que el panel solo puede leer: los
+          cambios no se guardarán. Revisa que el sitio esté desplegado en Netlify con el runtime de
+          Next.js.
+        </Notice>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
