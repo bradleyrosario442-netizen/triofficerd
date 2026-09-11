@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
   const categories = getHighlightedCategories();
-  const brands = getActiveBrands();
-  const total = getProducts().length;
+  const brands = await getActiveBrands();
+  const total = (await getProducts()).length;
 
   /** Ninguna sección repite un producto ya mostrado más arriba. */
   const shown = new Set<string>();
@@ -53,10 +53,10 @@ export default function HomePage() {
       categoryName: getSubcategory(product.category, product.subcategory)?.name ?? "",
     }));
 
-  const [deal] = take(getFeaturedProducts(1), 1);
-  const picks = decorate(take(getFeaturedProducts(40), 10));
-  const grid = take(getBestsellers(40), 8);
-  const arrivals = decorate(take(getNewArrivals(40), 10));
+  const [deal] = take(await getFeaturedProducts(1), 1);
+  const picks = decorate(take(await getFeaturedProducts(40), 10));
+  const grid = take(await getBestsellers(40), 8);
+  const arrivals = decorate(take(await getNewArrivals(40), 10));
 
   return (
     <div className="bg-mist">

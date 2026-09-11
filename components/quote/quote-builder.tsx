@@ -12,6 +12,7 @@ import { submitQuote } from "@/lib/services/orders";
 import { useQuote } from "@/lib/store/quote-context";
 import type { QuoteItem, QuoteRequest } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 import { whatsappForQuote } from "@/lib/utils/whatsapp";
 
 interface FormState {
@@ -181,7 +182,7 @@ export function QuoteBuilder() {
                       href={`/producto/${item.slug}`}
                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas"
                     >
-                      <Image src={item.image} alt="" fill sizes="80px" className="object-cover" />
+                      <Image {...imageSource(item.image, "sm")} alt="" fill sizes="80px" className="object-cover" />
                     </Link>
 
                     <div className="min-w-0 flex-1">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBrandName, getCategory, getSubcategory, search } from "@/lib/services/catalog";
+import { clientIp } from "@/lib/utils/client-ip";
 
 /**
  * Búsqueda global.
@@ -50,14 +51,6 @@ function rateLimit(key: string): { allowed: boolean; retryAfter: number } {
   };
 }
 
-/** Identifica al cliente sin registrar la IP completa en ningún log. */
-function clientKey(request: Request): string {
-  const forwarded = request.headers.get("x-nf-client-connection-ip") ??
-    request.headers.get("x-forwarded-for") ??
-    "";
-  return forwarded.split(",")[0].trim() || "desconocido";
-}
-
 const empty = {
   query: "",
   total: 0,
@@ -68,7 +61,7 @@ const empty = {
 };
 
 export async function GET(request: Request) {
-  const limit = rateLimit(clientKey(request));
+  const limit = rateLimit(clientIp(request));
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Demasiadas solicitudes." },
@@ -87,7 +80,7 @@ export async function GET(request: Request) {
     return NextResponse.json(empty);
   }
 
-  const results = search(query, 6);
+  const results = await search(query, 6);
 
   return NextResponse.json({
     query,

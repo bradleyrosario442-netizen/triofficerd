@@ -1,6 +1,21 @@
+import {
+  readPublishedState,
+  readState,
+  type AddedProduct,
+  type AdminState,
+  type ProductPatch,
+} from "@/lib/admin/overlay";
+import { storage } from "@/lib/admin/storage";
+import type { ProductInput } from "@/lib/admin/validation";
+import { brandLabel, buildBrands } from "@/lib/data/brands";
 import { categories, megaMenuHighlights } from "@/lib/data/categories";
-import { brands } from "@/lib/data/brands";
-import { products } from "@/lib/data/products";
+import {
+  baseProducts,
+  illustrationFor,
+  isIllustration,
+  slugify,
+  specificationsFor,
+} from "@/lib/data/products";
 import type {
   Brand,
   Category,
@@ -11,11 +26,14 @@ import type {
   SortKey,
   Subcategory,
 } from "@/lib/types";
+import { uploadedPhotoUrl } from "@/lib/utils/product-image";
 
 /* ==========================================================================
    Capa de acceso a datos del catálogo.
-   Hoy resuelve contra los arreglos en `lib/data`. Al conectar Supabase se
-   reimplementa aquí (mismas firmas) y la UI no se toca.
+   Lo publicado es el catálogo importado (`lib/data/products.ts`) con los
+   cambios del panel aplicados encima (`lib/admin/overlay.ts`). Las funciones
+   que devuelven productos son asíncronas porque esos cambios se leen del
+   almacén; las de categorías siguen siendo síncronas.
    ========================================================================== */
 
 /* ------------------------------ Categorías ------------------------------ */
@@ -51,59 +69,228 @@ export function getMenuSubcategories(categorySlug: string, limit = 7): Subcatego
   return ordered.slice(0, limit);
 }
 
-export function countProductsInCategory(categorySlug: string): number {
-  return products.filter((p) => p.category === categorySlug).length;
+/* ------------------------- Combinación de capas ------------------------- */
+
+const baseById = new Map(baseProducts.map((product) => [product.id, product]));
+const baseBrandSlugs = new Set(baseProducts.map((product) => product.brand));
+
+export function isBaseProduct(id: string): boolean {
+  return baseById.has(id);
+}
+
+/** El producto existe en el catálogo base o fue creado en el panel. */
+export async function productExists(id: string): Promise<boolean> {
+  return baseById.has(id) || Boolean((await readState()).overlay.added[id]);
+}
+
+/** Semilla estable para elegir la ilustración de un producto por su id. */
+function seedOf(id: string): number {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash;
+}
+
+type Label = (slug: string) => string;
+
+function applyPatch(product: Product, patch: ProductPatch, label: Label): Product {
+  const brand = patch.brandName !== undefined ? slugify(patch.brandName) || product.brand : product.brand;
+  const sku = patch.sku !== undefined ? patch.sku || "—" : product.sku;
+  const category = patch.category ?? product.category;
+  const subcategory = patch.subcategory ?? product.subcategory;
+  // Si cambió de subcategoría y aún no tiene foto, la ilustración la acompaña.
+  const images =
+    subcategory !== product.subcategory && isIllustration(product.images[0])
+      ? [illustrationFor(subcategory, seedOf(product.id))]
+      : product.images;
+
+  return {
+    ...product,
+    name: patch.name ?? product.name,
+    brand,
+    sku,
+    category,
+    subcategory,
+    description: patch.description ?? product.description,
+    featured: patch.featured ?? product.featured,
+    images,
+    specifications: specificationsFor(label(brand), sku, subcategory),
+  };
+}
+
+function fromAdded(entry: AddedProduct, label: Label): Product {
+  const brand = slugify(entry.brandName) || "generico";
+  const sku = entry.sku || "—";
+  return {
+    id: entry.id,
+    slug: entry.id,
+    sku,
+    name: entry.name,
+    shortDescription: "",
+    description: entry.description,
+    category: entry.category,
+    subcategory: entry.subcategory,
+    brand,
+    price: null,
+    previousPrice: null,
+    stock: 0,
+    availability: "on_request",
+    images: [illustrationFor(entry.subcategory, seedOf(entry.id))],
+    specifications: specificationsFor(label(brand), sku, entry.subcategory),
+    features: [],
+    kind: "corporate",
+    featured: entry.featured,
+    bestseller: false,
+    isNew: false,
+    sale: false,
+    quoteOnly: true,
+    createdAt: entry.createdAt,
+  };
+}
+
+function withPhotos(product: Product, files: string[]): Product {
+  return files.length
+    ? { ...product, images: files.map((file) => uploadedPhotoUrl(product.id, file)) }
+    : product;
+}
+
+interface MergedRow {
+  product: Product;
+  origin: "base" | "nuevo";
+  edited: boolean;
+  hidden: boolean;
+  /** Fotos subidas desde el panel. */
+  photos: string[];
+}
+
+function merge({ overlay, photos }: AdminState): { rows: MergedRow[]; label: Label } {
+  // Marcas escritas en el panel que el catálogo base no tiene: se respeta su grafía.
+  const typed = new Map<string, string>();
+  for (const entry of [...Object.values(overlay.edits), ...Object.values(overlay.added)]) {
+    const name = entry.brandName?.trim();
+    const slug = name ? slugify(name) : "";
+    if (name && slug && !baseBrandSlugs.has(slug) && !typed.has(slug)) typed.set(slug, name);
+  }
+  const label: Label = (slug) => brandLabel(slug, typed.get(slug));
+
+  const hidden = new Set(overlay.hidden);
+  const rows: MergedRow[] = [];
+
+  for (const base of baseProducts) {
+    const patch = overlay.edits[base.id];
+    const files = photos.productos[base.id] ?? [];
+    rows.push({
+      product: withPhotos(patch ? applyPatch(base, patch, label) : base, files),
+      origin: "base",
+      edited: Boolean(patch && Object.keys(patch).length > 0),
+      hidden: hidden.has(base.id),
+      photos: files,
+    });
+  }
+
+  for (const entry of Object.values(overlay.added)) {
+    if (baseById.has(entry.id)) continue;
+    const files = photos.productos[entry.id] ?? [];
+    rows.push({
+      product: withPhotos(fromAdded(entry, label), files),
+      origin: "nuevo",
+      edited: false,
+      hidden: false,
+      photos: files,
+    });
+  }
+
+  return { rows, label };
+}
+
+/* ------------------------------- Publicado ------------------------------ */
+
+interface Catalog {
+  products: Product[];
+  bySlug: Map<string, Product>;
+  byId: Map<string, Product>;
+  brands: Brand[];
+  names: Map<string, string>;
+}
+
+/**
+ * Catálogo combinado del proceso. Se recalcula solo cuando cambia la versión
+ * de los datos del panel; entre cambios, todas las visitas comparten el mismo.
+ */
+let published: { version: string; catalog: Catalog } | null = null;
+
+async function getCatalog(): Promise<Catalog> {
+  const state = await readPublishedState();
+  const version = `${state.overlay.updatedAt ?? "-"}|${state.photos.updatedAt ?? "-"}`;
+  if (!published || published.version !== version) {
+    const { rows, label } = merge(state);
+    const products = rows.filter((row) => !row.hidden).map((row) => row.product);
+    const brands = buildBrands(products, label);
+    published = {
+      version,
+      catalog: {
+        products,
+        bySlug: new Map(products.map((product) => [product.slug, product])),
+        byId: new Map(products.map((product) => [product.id, product])),
+        brands,
+        names: new Map(brands.map((brand) => [brand.slug, brand.name])),
+      },
+    };
+  }
+  return published.catalog;
+}
+
+export async function countProductsInCategory(categorySlug: string): Promise<number> {
+  return (await getCatalog()).products.filter((p) => p.category === categorySlug).length;
 }
 
 /* -------------------------------- Marcas -------------------------------- */
 
-export function getBrands(): Brand[] {
-  return brands;
+/** Marcas con al menos un producto publicado. */
+export async function getBrands(): Promise<Brand[]> {
+  return (await getCatalog()).brands;
 }
 
-export function getBrand(slug: string): Brand | undefined {
-  return brands.find((b) => b.slug === slug);
+export async function getBrand(slug: string): Promise<Brand | undefined> {
+  return (await getCatalog()).brands.find((b) => b.slug === slug);
 }
 
+/**
+ * Nombre visible de una marca. Es síncrono porque lo llaman las tarjetas al
+ * renderizar productos que ya salieron de `getCatalog()`.
+ */
 export function getBrandName(slug: string): string {
-  return getBrand(slug)?.name ?? slug;
+  return published?.catalog.names.get(slug) ?? brandLabel(slug);
 }
 
-/** Marcas que tienen al menos un producto publicado. */
-export function getActiveBrands(): Brand[] {
-  const used = new Set(products.map((p) => p.brand));
-  return brands.filter((b) => used.has(b.slug));
-}
+export const getActiveBrands = getBrands;
 
-export function getBrandsForCategory(categorySlug?: string): Brand[] {
-  const scope = categorySlug ? products.filter((p) => p.category === categorySlug) : products;
-  const used = new Set(scope.map((p) => p.brand));
+export async function getBrandsForCategory(categorySlug?: string): Promise<Brand[]> {
+  const { products, brands } = await getCatalog();
+  if (!categorySlug) return brands;
+  const used = new Set(products.filter((p) => p.category === categorySlug).map((p) => p.brand));
   return brands.filter((b) => used.has(b.slug));
 }
 
 /* ------------------------------- Productos ------------------------------ */
 
-export function getProducts(): Product[] {
-  return products;
+export async function getProducts(): Promise<Product[]> {
+  return (await getCatalog()).products;
 }
 
-/** Índices por slug e id: el catálogo tiene miles de entradas y las fichas
- *  se renderizan bajo demanda, así que no conviene recorrerlo en cada visita. */
-const bySlug = new Map(products.map((product) => [product.slug, product]));
-const byId = new Map(products.map((product) => [product.id, product]));
-
-export function getProductBySlug(slug: string): Product | undefined {
-  return bySlug.get(slug);
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  return (await getCatalog()).bySlug.get(slug);
 }
 
-export function getProductById(id: string): Product | undefined {
-  return byId.get(id);
+export async function getProductById(id: string): Promise<Product | undefined> {
+  return (await getCatalog()).byId.get(id);
 }
 
-export function getProductsByIds(ids: string[]): Product[] {
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
   const set = new Set(ids);
-  return products.filter((p) => set.has(p.id));
+  return (await getCatalog()).products.filter((p) => set.has(p.id));
 }
+
+const hasPhoto = (product: Product) => !isIllustration(product.images[0]);
 
 /**
  * Selección para la portada.
@@ -111,8 +298,10 @@ export function getProductsByIds(ids: string[]): Product[] {
  * El catálogo es de cotización: no hay ofertas, ni más vendidos, ni fechas de
  * alta reales. Para que las secciones muestren variedad en lugar de las
  * primeras filas del archivo, se toma un producto por subcategoría en rotación.
+ * Dentro de cada subcategoría van primero los que ya tienen foto, para que la
+ * portada muestre el catálogo real en cuanto se suben las primeras.
  */
-function spread(limit: number, offset = 0): Product[] {
+function spread(products: Product[], limit: number, offset = 0): Product[] {
   const bySub = new Map<string, Product[]>();
   for (const product of products) {
     const list = bySub.get(product.subcategory) ?? [];
@@ -120,7 +309,10 @@ function spread(limit: number, offset = 0): Product[] {
     bySub.set(product.subcategory, list);
   }
 
-  const groups = [...bySub.values()];
+  const groups = [...bySub.values()].map((group) => [
+    ...group.filter(hasPhoto),
+    ...group.filter((product) => !hasPhoto(product)),
+  ]);
   const picked: Product[] = [];
   for (let round = 0; picked.length < limit && round < 40; round += 1) {
     for (const group of groups) {
@@ -132,28 +324,33 @@ function spread(limit: number, offset = 0): Product[] {
   return picked;
 }
 
-export function getFeaturedProducts(limit = 8): Product[] {
-  return spread(limit, 0);
+/** Primero los que se marcaron como destacados en el panel. */
+export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
+  const { products } = await getCatalog();
+  const featured = products.filter((p) => p.featured);
+  const rest = spread(products, limit + featured.length, 0).filter((p) => !p.featured);
+  return [...featured, ...rest].slice(0, limit);
 }
 
-export function getNewArrivals(limit = 8): Product[] {
-  return spread(limit, 1);
+export async function getNewArrivals(limit = 8): Promise<Product[]> {
+  return spread((await getCatalog()).products, limit, 1);
 }
 
-export function getOnSaleProducts(limit = 8): Product[] {
-  return spread(limit, 2);
+export async function getOnSaleProducts(limit = 8): Promise<Product[]> {
+  return spread((await getCatalog()).products, limit, 2);
 }
 
-export function getBestsellers(limit = 8): Product[] {
-  return spread(limit, 3);
+export async function getBestsellers(limit = 8): Promise<Product[]> {
+  return spread((await getCatalog()).products, limit, 3);
 }
 
-export function getProductsByCategory(categorySlug: string, limit?: number): Product[] {
-  const list = products.filter((p) => p.category === categorySlug);
+export async function getProductsByCategory(categorySlug: string, limit?: number): Promise<Product[]> {
+  const list = (await getCatalog()).products.filter((p) => p.category === categorySlug);
   return typeof limit === "number" ? list.slice(0, limit) : list;
 }
 
-export function getRelatedProducts(product: Product, limit = 4): Product[] {
+export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
+  const { products } = await getCatalog();
   const sameSubcategory = products.filter(
     (p) => p.id !== product.id && p.category === product.category && p.subcategory === product.subcategory,
   );
@@ -163,8 +360,8 @@ export function getRelatedProducts(product: Product, limit = 4): Product[] {
   return [...sameSubcategory, ...sameBrand].slice(0, limit);
 }
 
-export function getCategorySiblings(product: Product, limit = 8): Product[] {
-  return products
+export async function getCategorySiblings(product: Product, limit = 8): Promise<Product[]> {
+  return (await getCatalog()).products
     .filter((p) => p.id !== product.id && p.category === product.category)
     .slice(0, limit);
 }
@@ -175,6 +372,7 @@ function matchesQuery(product: Product, query: string): boolean {
   const haystack = [
     product.name,
     product.shortDescription,
+    product.description,
     product.sku,
     getBrandName(product.brand),
     getCategory(product.category)?.name ?? "",
@@ -188,8 +386,8 @@ function matchesQuery(product: Product, query: string): boolean {
     .every((token) => normalize(haystack).includes(token));
 }
 
-export function filterProducts(filters: ProductFilters): Product[] {
-  return products.filter((product) => {
+export async function filterProducts(filters: ProductFilters): Promise<Product[]> {
+  return (await getCatalog()).products.filter((product) => {
     if (filters.category && product.category !== filters.category) return false;
     if (filters.subcategory && product.subcategory !== filters.subcategory) return false;
     if (filters.brands?.length && !filters.brands.includes(product.brand)) return false;
@@ -229,7 +427,7 @@ export function paginate<T>(items: T[], page: number, pageSize: number): Paginat
 
 /* -------------------------------- Búsqueda ------------------------------ */
 
-function normalize(value: string): string {
+export function normalize(value: string): string {
   return value
     .toLowerCase()
     .normalize("NFD")
@@ -237,12 +435,13 @@ function normalize(value: string): string {
 }
 
 /** Búsqueda global: productos, categorías (y subcategorías) y marcas. */
-export function search(rawQuery: string, limit = 6): SearchResults {
+export async function search(rawQuery: string, limit = 6): Promise<SearchResults> {
   const query = rawQuery.trim();
   if (query.length < 2) {
     return { products: [], categories: [], brands: [], total: 0 };
   }
 
+  const { products, brands } = await getCatalog();
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
   const matches = (haystack: string) => {
     const value = normalize(haystack);
@@ -273,7 +472,7 @@ export function search(rawQuery: string, limit = 6): SearchResults {
       matches(category.name) || category.subcategories.some((sub) => matches(sub.name)),
   );
 
-  const matchedBrands = getActiveBrands().filter((brand) => matches(brand.name));
+  const matchedBrands = brands.filter((brand) => matches(brand.name));
 
   return {
     products: scored.slice(0, limit).map((entry) => entry.product),
@@ -292,3 +491,56 @@ export const popularSearches = [
   "Silla ejecutiva",
   "Impresora",
 ];
+
+/* ---------------------------- Administración ---------------------------- */
+
+export interface AdminProduct {
+  product: Product;
+  origin: "base" | "nuevo";
+  edited: boolean;
+  hidden: boolean;
+  photos: string[];
+  /** Valores actuales, en la forma del formulario. */
+  input: ProductInput;
+  /** Valores del catálogo importado; `null` en productos creados en el panel. */
+  original: ProductInput | null;
+}
+
+function inputOf(product: Product, label: Label): ProductInput {
+  return {
+    name: product.name,
+    brandName: label(product.brand),
+    sku: product.sku === "—" ? "" : product.sku,
+    category: product.category,
+    subcategory: product.subcategory,
+    description: product.description,
+    featured: product.featured,
+  };
+}
+
+/** Todo el catálogo, incluidos los eliminados, leído sin caché. */
+export async function getAdminCatalog() {
+  const { rows, label } = merge(await readState());
+  const items: AdminProduct[] = rows.map((row) => {
+    const base = row.origin === "base" ? baseById.get(row.product.id) : undefined;
+    return {
+      ...row,
+      input: inputOf(row.product, label),
+      original: base ? inputOf(base, label) : null,
+    };
+  });
+  return {
+    items,
+    byId: new Map(items.map((item) => [item.product.id, item])),
+    brandNames: [...new Set(items.map((item) => item.input.brandName))].sort((a, b) =>
+      a.localeCompare(b, "es"),
+    ),
+    storageKind: storage().kind,
+  };
+}
+
+/** Valores originales de un producto del catálogo importado. */
+export function baseInput(id: string): ProductInput | null {
+  const base = baseById.get(id);
+  return base ? inputOf(base, (slug) => brandLabel(slug)) : null;
+}

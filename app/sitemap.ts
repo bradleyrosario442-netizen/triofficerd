@@ -3,7 +3,7 @@ import { categories } from "@/lib/data/categories";
 import { site } from "@/lib/data/site";
 import { getProducts } from "@/lib/services/catalog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -36,7 +36,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   ]);
 
-  const productRoutes: MetadataRoute.Sitemap = getProducts().map((product) => ({
+  const productRoutes: MetadataRoute.Sitemap = (await getProducts()).map((product) => ({
     url: `${site.url}/producto/${product.slug}`,
     lastModified: new Date(product.createdAt),
     changeFrequency: "weekly",

@@ -25,7 +25,7 @@ interface CatalogViewProps {
   lockedSubcategory?: string;
 }
 
-export function CatalogView({
+export async function CatalogView({
   state,
   basePath,
   lockedCategory,
@@ -39,11 +39,11 @@ export function CatalogView({
     subcategory: lockedSubcategory ?? filters.subcategory,
   };
 
-  const filtered = sortProducts(filterProducts(effectiveFilters), sort);
+  const filtered = sortProducts(await filterProducts(effectiveFilters), sort);
   const paged = paginate(filtered, page, PAGE_SIZE);
 
   const categories = getCategories();
-  const brands = getBrandsForCategory(lockedCategory ?? filters.category);
+  const brands = await getBrandsForCategory(lockedCategory ?? filters.category);
 
   const chips: ActiveFilterChip[] = [];
   if (raw.q) chips.push({ key: "q", label: `Búsqueda: “${raw.q}”` });

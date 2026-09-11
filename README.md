@@ -190,7 +190,14 @@ fuente: el árbol de categorías se deriva de ese mapa.
 ### Imágenes
 
 Mientras no haya fotografías, cada producto muestra la ilustración vectorial
-que corresponde a su tipo. Para cargar fotos reales:
+que corresponde a su tipo.
+
+**La vía normal es el panel** (`/admin/fotos`, ver más abajo): se arrastra la
+carpeta y listo, sin tocar el repositorio ni volver a desplegar. Lo que sigue es
+la alternativa desde el repositorio; si un producto tiene fotos en ambos
+lados, mandan las del panel.
+
+Para cargar fotos desde el repositorio:
 
 1. Deja los archivos en `public/img/fotos/`, nombrados con el **número de parte
    del fabricante** o con el identificador del producto. Mayúsculas, guiones y
@@ -240,8 +247,71 @@ La otra mitad son marcas de distribuidor o regionales que no publican ficha:
 ahí la vía es el paquete de medios del propio distribuidor o fotografía propia.
 No se descargan imágenes de terceros sin esa autorización.
 
-Si el volumen crece, las fotos van a almacenamiento de objetos en vez del
-repositorio: `next.config.ts` ya tiene el `remotePatterns` preparado.
+---
+
+## Panel de administración
+
+En `/admin`. Sirve para subir fotos —una por una o miles de golpe—, crear
+productos, retirarlos del sitio y corregir nombre, marca, número de parte,
+categoría y descripción. También permite destacar productos en la portada.
+Cada cambio se publica al guardarlo: no hace falta volver a desplegar.
+
+### Activarlo
+
+El panel viene cerrado. Para abrirlo, desde la carpeta del proyecto y en
+PowerShell o CMD:
+
+```
+npm run admin:clave
+```
+
+Pide la contraseña dos veces sin mostrarla (mínimo 12 caracteres) y guarda en
+Netlify, solo para producción, dos variables: `ADMIN_PASSWORD_HASH` —el hash
+scrypt, nunca la contraseña— y `ADMIN_SESSION_SECRET`, una clave aleatoria
+para firmar las sesiones. Después hay que volver a desplegar (**Deploys →
+Trigger deploy**) para que el sitio las lea. Repetirlo cambia la contraseña y
+cierra todas las sesiones abiertas.
+
+Para probar en local: `npm run admin:clave -- --local`, que las escribe en
+`.env.local`. En local los datos se guardan en `.data/`, así que nada de lo que
+se haga ahí llega al sitio publicado.
+
+### Dónde viven los datos
+
+En **Netlify Blobs**, el almacén del propio sitio: no hay base de datos ni
+cuenta aparte. `data/products.json` no se modifica nunca; el panel guarda por
+encima solo lo que cambió (`lib/admin/overlay.ts`) y el sitio combina las dos
+capas al leer (`lib/services/catalog.ts`). Por eso:
+
+- Retirar un producto importado es reversible (**Productos → Eliminados →
+  Restaurar**). Los creados en el panel sí se borran del todo, con sus fotos.
+- «Revertir a los datos importados» descarta las ediciones de un producto.
+- Volver a escribir el valor original de un campo deshace ese cambio.
+
+Si se vuelve a importar el catálogo con `npm run catalog`, los identificadores
+deben seguir siendo los mismos para que las ediciones sigan en su producto:
+salen de marca + número de parte, así que solo cambian si cambia uno de los dos.
+
+Blobs no está disponible durante `next build`. El plugin local
+`netlify/plugins/catalogo-snapshot` corre antes y copia los cambios a
+`data/.snapshot/`, para que las páginas estáticas nazcan con ellos. Si no
+puede leerlos, detiene el deploy en vez de publicar un sitio sin lo hecho en el
+panel; la versión anterior sigue en línea.
+
+### Fotos
+
+El navegador endereza cada foto, la reduce a 1600 px (y a 480 px para
+tarjetas y miniaturas) y la convierte a WebP antes de subirla. Netlify corta
+las peticiones de más de 6 MB y su optimizador no procesa imágenes servidas
+por una función, así que hacerlo en el servidor no era opción. Cada foto se
+guarda con un nombre único, así que se cachea un año sin riesgo de servir una
+vieja.
+
+La subida masiva empareja por nombre con el mismo criterio que
+`npm run imagenes` —número de parte o id, `-1`/`-2` para varias, y también el
+`(2)` que pone Windows al duplicar— y muestra antes de subir cuáles no tienen
+producto. Por defecto reemplaza las fotos que ya tenía cada producto. Máximo
+12 por producto.
 
 ---
 
@@ -249,10 +319,40 @@ repositorio: `next.config.ts` ya tiene el `remotePatterns` preparado.
 
 ### Superficie real
 
-No hay autenticación, sesiones, cookies, base de datos ni subida de archivos.
-Los formularios de contacto, cotización y checkout no llegan a ningún servidor:
-`lib/services/orders.ts` genera la referencia en el navegador. La única
-superficie pública que ejecuta código en el servidor es `/api/search`.
+No hay cuentas de clientes ni base de datos. Los formularios de contacto,
+cotización y checkout no llegan a ningún servidor: `lib/services/orders.ts`
+genera la referencia en el navegador.
+
+Lo que ejecuta código en el servidor: `/api/search` (público), `/fotos/*`
+(público, solo lectura) y el panel, `/admin` y `/api/admin/*`, que es la única
+parte con sesión y con escritura.
+
+### Panel de administración
+
+- **Contraseña**: solo existe su hash scrypt (N = 2¹⁵), en una variable de
+  Netlify marcada como secreta. Nada en el repositorio. Sin las dos variables
+  el panel no abre: no hay contraseña por defecto.
+- **Sesión**: cookie `__Host-` firmada con HMAC-SHA256, `HttpOnly`, `Secure`,
+  `SameSite=Strict`, de 8 horas. La firma incluye una huella del hash, así que
+  cambiar la contraseña invalida las sesiones abiertas.
+- **Cada endpoint comprueba sesión y origen** (`lib/admin/http.ts`); las
+  páginas llaman a `requireAdmin()` antes de leer datos. No depende de un
+  middleware que se pueda saltar.
+- **Intentos**: 5 fallos en 15 minutos bloquean esa IP 15 minutos. El contador
+  vive en Blobs, no en memoria, así que vale entre instancias. La IP no se
+  guarda, solo una huella firmada.
+- **Subidas**: el formato se decide por los primeros bytes, no por la
+  extensión ni por lo que declara el navegador. Solo WebP, JPEG y PNG —SVG no,
+  que puede llevar código—. Ids y nombres de archivo se validan con listas
+  cerradas antes de formar cualquier ruta.
+- **Textos**: se limpian caracteres de control y se limitan en longitud. React
+  los escapa al pintar y el JSON-LD pasa por `jsonLd()`. Probado con
+  `<script>` e `<img onerror>` en la descripción.
+- `/admin` lleva `noindex`, `no-store` y está excluido en `robots.txt`.
+
+Queda fuera de alcance: un ataque de fuerza bruta repartido entre miles de IP.
+Lo frena la lentitud de scrypt y una contraseña larga; para más, Netlify Rate
+Limiting o un WAF.
 
 ### Cabeceras
 

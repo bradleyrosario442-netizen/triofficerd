@@ -91,6 +91,34 @@ function imagesFor(id: string, icon: string, seed: number): string[] {
   return gallery?.length ? gallery : [`/img/products/${icon}-${(seed % 3) + 1}.svg`];
 }
 
+/** Ilustración de cada subcategoría, para productos nuevos o recategorizados. */
+const iconBySubcategory = new Map<string, string>();
+for (const entry of Object.values(sourceMap)) {
+  if (!iconBySubcategory.has(entry.subcategory)) iconBySubcategory.set(entry.subcategory, entry.icon);
+}
+
+export function illustrationFor(subcategory: string, seed: number): string {
+  return `/img/products/${iconBySubcategory.get(subcategory) ?? "accessory"}-${(seed % 3) + 1}.svg`;
+}
+
+export function isIllustration(src: string | undefined): boolean {
+  return !src || src.startsWith("/img/products/");
+}
+
+/** Nombre visible de una subcategoría. */
+export function subcategoryLabel(subcategory: string): string {
+  return Object.values(sourceMap).find((entry) => entry.subcategory === subcategory)?.subcategoryName ?? "";
+}
+
+/** Ficha técnica mínima: los tres datos de hecho que tiene cada producto. */
+export function specificationsFor(brandName: string, sku: string, subcategory: string) {
+  return [
+    { label: "Marca", value: brandName },
+    ...(sku && sku !== "—" ? [{ label: "Número de parte", value: sku }] : []),
+    { label: "Categoría", value: subcategoryLabel(subcategory) },
+  ];
+}
+
 /**
  * Marcas conocidas del propio catálogo, para las entradas que llegan sin el
  * campo de marca. Si el nombre menciona una marca que ya existe en el catálogo,
@@ -165,4 +193,8 @@ function buildProducts(): Product[] {
   return list;
 }
 
-export const products: Product[] = buildProducts();
+/**
+ * Catálogo importado, tal como sale del archivo. El sitio no lo usa
+ * directamente: `lib/services/catalog.ts` le aplica los cambios del panel.
+ */
+export const baseProducts: Product[] = buildProducts();

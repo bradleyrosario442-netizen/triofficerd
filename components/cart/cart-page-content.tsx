@@ -12,6 +12,7 @@ import { amountToFreeShipping } from "@/lib/services/pricing";
 import { useCart } from "@/lib/store/cart-context";
 import { useQuote } from "@/lib/store/quote-context";
 import { formatCurrency } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 import { whatsappForCart } from "@/lib/utils/whatsapp";
 
 export function CartPageContent() {
@@ -89,7 +90,7 @@ export function CartPageContent() {
                     href={`/producto/${item.slug}`}
                     className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas"
                   >
-                    <Image src={item.image} alt="" fill sizes="80px" className="object-cover" />
+                    <Image {...imageSource(item.image, "sm")} alt="" fill sizes="80px" className="object-cover" />
                   </Link>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">

@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
 import type { Product } from "@/lib/types";
+import { imageSource } from "@/lib/utils/product-image";
 import { whatsappForProduct } from "@/lib/utils/whatsapp";
 
 interface Item {
@@ -69,7 +70,7 @@ export function TopPicks({ title, items }: { title: string; items: Item[] }) {
                   aria-hidden="true"
                 >
                   <Image
-                    src={product.images[0]}
+                    {...imageSource(product.images[0], "sm")}
                     alt=""
                     fill
                     sizes="232px"

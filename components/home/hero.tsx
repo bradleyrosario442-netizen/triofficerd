@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { Container } from "@/components/ui/section";
 import catalogImages from "@/data/product-images.json";
 import type { Product } from "@/lib/types";
+import { imageSource } from "@/lib/utils/product-image";
 
 /** Posición, tamaño y ritmo de cada pieza del collage. */
 const layout = [
@@ -109,7 +110,7 @@ export function Hero({ deal, total }: { deal?: Product; total: number }) {
                 className="group absolute -bottom-2 left-0 z-40 hidden items-center gap-3 rounded-2xl border border-line bg-white/95 p-3 pr-5 shadow-lift backdrop-blur transition-transform hover:-translate-y-0.5 sm:flex"
               >
                 <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-canvas">
-                  <Image src={deal.images[0]} alt="" fill sizes="48px" className="object-cover" />
+                  <Image {...imageSource(deal.images[0], "sm")} alt="" fill sizes="48px" className="object-cover" />
                 </span>
                 <span>
                   <span className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-brand-600">

@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/marcas" },
 };
 
-export default function MarcasPage() {
-  const brands = getActiveBrands();
-  const products = getProducts();
+export default async function MarcasPage() {
+  const brands = await getActiveBrands();
+  const products = await getProducts();
 
   return (
     <>

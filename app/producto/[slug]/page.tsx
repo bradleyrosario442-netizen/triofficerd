@@ -17,6 +17,7 @@ import {
   getSubcategory,
 } from "@/lib/services/catalog";
 import { jsonLd } from "@/lib/utils/json-ld";
+import { truncate } from "@/lib/utils/product-name";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -34,12 +35,14 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
 
   const brandName = getBrandName(product.brand);
   const categoryName = getSubcategory(product.category, product.subcategory)?.name ?? "";
-  const description = `${brandName} ${product.name}. ${categoryName} disponible por cotización en ${site.name}, República Dominicana.`;
+  const description = product.description
+    ? truncate(product.description.replace(/\s+/g, " "), 155)
+    : `${brandName} ${product.name}. ${categoryName} disponible por cotización en ${site.name}, República Dominicana.`;
 
   return {
     title: `${brandName} ${product.name}`,
@@ -75,20 +78,21 @@ const notes = [
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
   const category = getCategory(product.category);
   const subcategory = getSubcategory(product.category, product.subcategory);
   const brandName = getBrandName(product.brand);
-  const related = getRelatedProducts(product, 4);
-  const siblings = getCategorySiblings(product, 4);
+  const related = await getRelatedProducts(product, 4);
+  const siblings = await getCategorySiblings(product, 4);
 
   // Sin precio publicado no se declara `offers`: el dato no existe.
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
+    ...(product.description ? { description: product.description } : {}),
     ...(product.sku && product.sku !== "—" ? { sku: product.sku, mpn: product.sku } : {}),
     brand: { "@type": "Brand", name: brandName },
     image: product.images.map((image) => `${site.url}${image}`),
@@ -166,6 +170,14 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
 
         <div className="mt-12 max-w-3xl border-t border-line pt-10">
+          {product.description ? (
+            <div className="mb-10">
+              <h2 className="text-lg font-semibold text-ink">Descripción</h2>
+              <p className="mt-3 whitespace-pre-line text-[14.5px] leading-relaxed text-slate-700">
+                {product.description}
+              </p>
+            </div>
+          ) : null}
           <h2 className="text-lg font-semibold text-ink">Ficha del producto</h2>
           <dl className="mt-3 overflow-hidden rounded-2xl border border-line">
             {product.specifications.map((spec, index) => (

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 
 export function ProductGallery({ product }: { product: Product }) {
   const [active, setActive] = useState(0);
@@ -13,7 +14,7 @@ export function ProductGallery({ product }: { product: Product }) {
       <div className="relative aspect-[4/3] flex-1 overflow-hidden rounded-xl border border-line bg-canvas">
         <Image
           key={product.images[active]}
-          src={product.images[active]}
+          {...imageSource(product.images[active])}
           alt={`${product.name} — vista ${active + 1}`}
           fill
           priority
@@ -43,7 +44,7 @@ export function ProductGallery({ product }: { product: Product }) {
                   : "border-line hover:border-slate-300",
               )}
             >
-              <Image src={image} alt="" fill sizes="80px" className="object-cover" />
+              <Image {...imageSource(image, "sm")} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
         </div>

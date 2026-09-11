@@ -12,6 +12,7 @@ import { submitOrder } from "@/lib/services/orders";
 import { useCart } from "@/lib/store/cart-context";
 import type { DeliveryMethod, Order, PaymentMethod } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 
 const deliveryOptions: { value: DeliveryMethod; title: string; text: string }[] = [
   { value: "delivery", title: "Envío a domicilio", text: "Coordinamos la entrega en la dirección indicada." },
@@ -423,7 +424,7 @@ export function CheckoutForm() {
             {items.map((item) => (
               <li key={item.productId} className="flex gap-3">
                 <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas">
-                  <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
+                  <Image {...imageSource(item.image, "sm")} alt="" fill sizes="56px" className="object-cover" />
                   <span className="absolute right-0 top-0 inline-flex h-5 min-w-5 items-center justify-center rounded-bl-lg bg-ink px-1 text-[10px] font-bold text-white">
                     {item.quantity}
                   </span>

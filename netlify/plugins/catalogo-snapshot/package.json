@@ -1,0 +1,6 @@
+{
+  "name": "catalogo-snapshot",
+  "private": true,
+  "type": "module",
+  "main": "index.js"
+}

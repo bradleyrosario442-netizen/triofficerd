@@ -42,7 +42,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   if (!category) notFound();
 
   const state = parseShopParams(await searchParams);
-  const total = countProductsInCategory(category.slug);
+  const total = await countProductsInCategory(category.slug);
 
   return (
     <>

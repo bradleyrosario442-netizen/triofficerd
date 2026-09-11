@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SideDock } from "@/components/layout/side-dock";
+import { SiteOnly } from "@/components/layout/site-only";
 import { WhatsAppFab } from "@/components/layout/whatsapp-fab";
 import { Providers } from "@/components/providers";
 import { SearchDialog } from "@/components/search/search-dialog";
@@ -101,15 +102,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
 
         <Providers>
-          <Header />
+          <SiteOnly>
+            <Header />
+          </SiteOnly>
           <main id="contenido">{children}</main>
-          <Footer />
-
-          <SearchDialog />
-          <CartDrawer />
-          <MobileNav />
-          <SideDock />
-          <WhatsAppFab />
+          <SiteOnly>
+            <Footer />
+            <SearchDialog />
+            <CartDrawer />
+            <MobileNav />
+            <SideDock />
+            <WhatsAppFab />
+          </SiteOnly>
         </Providers>
 
       </body>

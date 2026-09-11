@@ -14,6 +14,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Antes de construir, copia los cambios del panel (Netlify Blobs) para que
+# las páginas estáticas nazcan con ellos. Ver netlify/plugins/catalogo-snapshot.
+[[plugins]]
+  package = "/netlify/plugins/catalogo-snapshot"
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -39,3 +44,16 @@
   [headers.values]
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex"
+
+# El panel de administración no se cachea ni se indexa.
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"

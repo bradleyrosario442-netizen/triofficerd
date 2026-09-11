@@ -94,6 +94,14 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
+      ...["/admin", "/admin/:path*"].map((source) => ({
+        // El panel no se cachea ni se indexa.
+        source,
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      })),
     ];
   },
 };

@@ -9,9 +9,11 @@
     "typecheck": "tsc --noEmit",
     "placeholders": "node scripts/generate-placeholders.mjs",
     "catalog": "node scripts/import-catalog.mjs && node scripts/build-brands.mjs",
-    "imagenes": "node scripts/build-images.mjs"
+    "imagenes": "node scripts/build-images.mjs",
+    "admin:clave": "node scripts/admin-clave.mjs"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.0.3",
     "next": "^15.5.25",
     "react": "19.1.0",
     "react-dom": "19.1.0",

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearch } from "@/components/search/use-search";
 import { Icon } from "@/components/ui/icon";
 import { popularSearches } from "@/lib/data/catalog-meta";
+import { imageSource } from "@/lib/utils/product-image";
 
 /** Buscador destacado de la portada, con resultados predictivos en línea. */
 export function HeroSearch() {
@@ -114,7 +115,7 @@ export function HeroSearch() {
                       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-50"
                     >
                       <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas">
-                        <Image src={product.image} alt="" fill sizes="44px" className="object-cover" />
+                        <Image {...imageSource(product.image, "sm")} alt="" fill sizes="44px" className="object-cover" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-medium text-ink">{product.name}</span>

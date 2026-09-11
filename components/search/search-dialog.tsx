@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import { popularSearches } from "@/lib/data/catalog-meta";
 import { useUI } from "@/lib/store/ui-context";
 import { cn } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 
 interface Hit {
   href: string;
@@ -189,7 +190,7 @@ export function SearchDialog() {
                           )}
                         >
                           <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas">
-                            <Image src={product.image} alt="" fill sizes="48px" className="object-cover" />
+                            <Image {...imageSource(product.image, "sm")} alt="" fill sizes="48px" className="object-cover" />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[14px] font-medium text-ink">{product.name}</span>

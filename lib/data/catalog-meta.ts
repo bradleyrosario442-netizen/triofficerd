@@ -1,6 +1,7 @@
 import brandNames from "@/data/brand-names.json";
 import { categories } from "@/lib/data/taxonomy";
 import type { Subcategory } from "@/lib/types";
+import { titleCase } from "@/lib/utils/product-name";
 
 /**
  * Metadatos del catálogo seguros para el cliente.
@@ -15,7 +16,7 @@ const names = brandNames as Record<string, string>;
 
 /** Nombre legible de una marca a partir de su slug. */
 export function brandName(slug: string): string {
-  return names[slug] ?? slug;
+  return names[slug] ?? titleCase(slug.replace(/-/g, " "));
 }
 
 /** Subcategorías de una categoría, para el mega menú y la navegación móvil. */

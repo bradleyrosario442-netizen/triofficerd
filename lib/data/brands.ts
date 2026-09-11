@@ -1,5 +1,4 @@
-import { products, slugify } from "@/lib/data/products";
-import type { Brand } from "@/lib/types";
+import type { Brand, Product } from "@/lib/types";
 import { titleCase } from "@/lib/utils/product-name";
 
 /**
@@ -34,12 +33,20 @@ const EXACT: Record<string, string> = {
   "nexxt-infrastructure": "Nexxt Infrastructure",
 };
 
-function buildBrands(): Brand[] {
+/**
+ * Nombre visible de una marca. `typed` es el nombre tal como se escribió en
+ * el panel, para marcas nuevas: se respeta su grafía salvo que haya una fija.
+ */
+export function brandLabel(slug: string, typed?: string): string {
+  return EXACT[slug] ?? (typed?.trim() || titleCase(slug.replace(/-/g, " ")));
+}
+
+export function buildBrands(products: Product[], label: (slug: string) => string): Brand[] {
   const counts = new Map<string, { name: string; count: number; cats: Set<string> }>();
 
   for (const product of products) {
     const entry = counts.get(product.brand) ?? {
-      name: EXACT[product.brand] ?? titleCase(product.brand.replace(/-/g, " ")),
+      name: label(product.brand),
       count: 0,
       cats: new Set<string>(),
     };
@@ -57,8 +64,3 @@ function buildBrands(): Brand[] {
       categories: [...entry.cats],
     }));
 }
-
-export const brands: Brand[] = buildBrands();
-
-/** Slug de marca a partir del nombre, para enlaces y filtros. */
-export { slugify };

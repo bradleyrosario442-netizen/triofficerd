@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { getBrandName, getCategory, getSubcategory } from "@/lib/services/catalog";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 import { whatsappForProduct } from "@/lib/utils/whatsapp";
 
 /**
@@ -37,7 +38,7 @@ export function ProductCard({ product, view = "grid", priority, className }: Pro
       aria-hidden="true"
     >
       <Image
-        src={product.images[0]}
+        {...imageSource(product.images[0], "sm")}
         alt=""
         fill
         sizes={view === "list" ? "176px" : "(min-width: 1024px) 300px, (min-width: 640px) 33vw, 50vw"}

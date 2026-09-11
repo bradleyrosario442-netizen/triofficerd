@@ -10,6 +10,7 @@ import { brandName } from "@/lib/data/catalog-meta";
 import { useCart } from "@/lib/store/cart-context";
 import { useUI } from "@/lib/store/ui-context";
 import { formatCurrency } from "@/lib/utils/format";
+import { imageSource } from "@/lib/utils/product-image";
 
 /** Carrito lateral: acceso rápido sin abandonar la navegación. */
 export function CartDrawer() {
@@ -98,7 +99,7 @@ export function CartDrawer() {
                     onClick={closePanel}
                     className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-canvas"
                   >
-                    <Image src={item.image} alt="" fill sizes="80px" className="object-cover" />
+                    <Image {...imageSource(item.image, "sm")} alt="" fill sizes="80px" className="object-cover" />
                   </Link>
 
                   <div className="min-w-0 flex-1">
