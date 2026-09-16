@@ -11,7 +11,7 @@
  */
 import { execSync } from "node:child_process";
 import { randomBytes, scrypt } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const MIN_LENGTH = 12;
@@ -19,14 +19,21 @@ const PARAMS = { N: 2 ** 15, r: 8, p: 1 };
 const local = process.argv.includes("--local");
 
 const CTRL_C = String.fromCharCode(3);
+const ESC = String.fromCharCode(27);
 const BACKSPACE = [String.fromCharCode(127), String.fromCharCode(8)];
 
-/** Lee una línea sin mostrarla. */
+/**
+ * Pide la contraseña mostrando un asterisco por carácter. Sin ninguna señal en
+ * pantalla no se nota un dedo de más, y la confirmación falla una y otra vez.
+ */
 function askHidden(question) {
   return new Promise((resolve) => {
     const { stdin, stdout } = process;
     if (!stdin.isTTY) {
-      console.error("Ejecuta este comando en una terminal interactiva (PowerShell o CMD).");
+      console.error("Esta terminal no permite escribir la contraseña. Dos salidas:");
+      console.error("  · Abre PowerShell o CMD y repite el comando ahí.");
+      console.error("  · O escríbela en un archivo y pásasela:");
+      console.error("      node scripts/admin-clave.mjs --archivo C:\\ruta\\clave.txt");
       process.exit(1);
     }
     stdout.write(question);
@@ -36,6 +43,8 @@ function askHidden(question) {
 
     let value = "";
     const onData = (chunk) => {
+      // Flechas y teclas de función llegan como secuencias que empiezan por Esc.
+      if (chunk.startsWith(ESC)) return;
       for (const char of chunk) {
         if (char === "\r" || char === "\n") {
           stdin.setRawMode(false);
@@ -49,12 +58,37 @@ function askHidden(question) {
           stdout.write("\n");
           process.exit(130);
         }
-        if (BACKSPACE.includes(char)) value = value.slice(0, -1);
-        else value += char;
+        if (BACKSPACE.includes(char)) {
+          if (value) {
+            value = value.slice(0, -1);
+            stdout.write("\b \b");
+          }
+          continue;
+        }
+        if (char < " ") continue;
+        value += char;
+        stdout.write("*");
       }
     };
     stdin.on("data", onData);
   });
+}
+
+/**
+ * Alternativa al teclado: la contraseña se escribe en un archivo con el Bloc
+ * de notas y se pasa con `--archivo`. El archivo se sobrescribe y se borra
+ * enseguida, para que no quede rondando en el disco.
+ */
+function readFromFile(file) {
+  if (!file || !existsSync(file)) {
+    console.error(`No encuentro el archivo: ${file ?? "(falta la ruta)"}`);
+    process.exit(1);
+  }
+  const password = readFileSync(file, "utf8").split(/\r?\n/)[0].trim();
+  writeFileSync(file, randomBytes(512).toString("hex"));
+  rmSync(file, { force: true });
+  console.log(`Leída de ${path.basename(file)}: ${password.length} caracteres. Archivo borrado.`);
+  return password;
 }
 
 function hash(password) {
@@ -75,12 +109,18 @@ function hash(password) {
   });
 }
 
-const password = await askHidden("Nueva contraseña del panel: ");
+const fromFile = process.argv.indexOf("--archivo");
+const password =
+  fromFile === -1
+    ? await askHidden("Nueva contraseña del panel: ")
+    : readFromFile(process.argv[fromFile + 1]);
+
 if (password.length < MIN_LENGTH) {
   console.error(`Debe tener al menos ${MIN_LENGTH} caracteres. No se cambió nada.`);
   process.exit(1);
 }
-if ((await askHidden("Repítela: ")) !== password) {
+// Con archivo no hace falta repetirla: se lee de donde ya está escrita.
+if (fromFile === -1 && (await askHidden("Repítela: ")) !== password) {
   console.error("No coinciden. No se cambió nada.");
   process.exit(1);
 }
