@@ -102,11 +102,31 @@ if (local) {
   console.log("\nListo: guardada en .env.local. Reinicia `npm run dev` y entra en /admin.");
 } else {
   // Los valores solo tienen letras, números, "-", "_" y ":": no requieren comillas.
+  const save = (key, value, secret) =>
+    execSync(
+      `npx netlify env:set ${key} ${value}${secret ? " --secret" : ""} --context production --force`,
+      { stdio: ["ignore", "ignore", secret ? "pipe" : "inherit"] },
+    );
+
   for (const [key, value] of Object.entries(values)) {
-    execSync(`npx netlify env:set ${key} ${value} --secret --context production --force`, {
+    try {
+      save(key, value, true);
+    } catch {
+      // Si la cuenta no admite variables secretas, se guarda igual: es un hash.
+      console.log(`Aviso: ${key} quedó sin marcar como secreta.`);
+      save(key, value, false);
+    }
+  }
+  console.log("\nGuardadas en Netlify, solo para el sitio de producción.");
+
+  // Las funciones reciben las variables al desplegarse: hace falta un deploy nuevo.
+  try {
+    const state = JSON.parse(readFileSync(path.join(process.cwd(), ".netlify", "state.json"), "utf8"));
+    execSync(`npx netlify api createSiteBuild --data "{\\"site_id\\":\\"${state.siteId}\\"}"`, {
       stdio: ["ignore", "ignore", "inherit"],
     });
+    console.log("Despliegue lanzado. En un par de minutos entra en /admin con tu contraseña.");
+  } catch {
+    console.log("Ahora vuelve a desplegar: Netlify → Deploys → Trigger deploy → Deploy site.");
   }
-  console.log("\nListo: guardada en Netlify, solo para el sitio de producción.");
-  console.log("Para que tome efecto, vuelve a desplegar: Netlify → Deploys → Trigger deploy → Deploy site.");
 }
